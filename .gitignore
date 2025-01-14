@@ -1,0 +1,14 @@
+*.csproj
+Logs
+obj
+Temp
+UserSettings
+Library
+YealmToon.sln
+.vs
+.vscode
+.vsconfig
+output
+build
+*.log*
+*log.txt*
