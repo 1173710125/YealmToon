@@ -2,10 +2,13 @@ Shader "YealmToon/CommonOpaque"
 {
     Properties
     {
-        _BaseMap("BaseMap", 2D) = "white" {}
+        [NoScaleOffset] _BaseMap("BaseMap", 2D) = "white" {}
+        _BaseColor("baseColor", Color) = (1,1,1,1)
 
         _NormalScale("normal scale", Float) = 1.0
         [NoScaleOffset]_NormalMap ("normal", 2D) = "bump" {}
+
+        [NoScaleOffset]_IDMap ("IDMap", 2D) = "white" {}
     }
     SubShader
     {

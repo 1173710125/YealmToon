@@ -13,20 +13,21 @@ public class YealmToonGlobalSettingFeature : ScriptableRendererFeature
         // It is passed as a parameter to the delegate function that executes the RenderGraph pass.
         private class PassData
         {
-            internal float shadowThreshold;
+            internal float specularThreshold;
+            internal float brightShadowThreshold;
         }
 
         // This static method is passed as the RenderFunc delegate to the RenderGraph render pass.
         // It is used to execute draw commands.
         static void ExecutePass(PassData data, RasterGraphContext context)
         {
-            context.cmd.SetGlobalFloat("_ShadowThreshold", data.shadowThreshold);
+            context.cmd.SetGlobalFloat("_SpecularThreshold", data.specularThreshold);
+            context.cmd.SetGlobalFloat("_BrightShadowThreshold", data.brightShadowThreshold);
         }
 
         internal bool Setup()
         {
             m_YealmToonSettings = VolumeManager.instance.stack.GetComponent<YealmToonSettings>();
-            Debug.LogWarning("threshold:" + m_YealmToonSettings.shadowThreshold.value);
             if(m_YealmToonSettings != null) return true;
             return false;
         }
@@ -57,7 +58,8 @@ public class YealmToonGlobalSettingFeature : ScriptableRendererFeature
                 builder.SetRenderAttachment(resourceData.activeColorTexture, 0);
 
                 // 初始化passdata
-                passData.shadowThreshold = m_YealmToonSettings.shadowThreshold.value;
+                passData.specularThreshold = m_YealmToonSettings.specularThreshold.value;
+                passData.brightShadowThreshold = m_YealmToonSettings.brightShadowThreshold.value;
 
                 builder.AllowGlobalStateModification(true);
 
@@ -83,16 +85,6 @@ public class YealmToonGlobalSettingFeature : ScriptableRendererFeature
         // You don't have to call ScriptableRenderContext.submit, the render pipeline will call it at specific points in the pipeline.
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            //创建cmd
-            CommandBuffer cmd = CommandBufferPool.Get("YealmToonInitialize");
-
-            cmd.SetGlobalFloat("_ShadowThreshold", m_YealmToonSettings.shadowThreshold.value);
-
-            //execute
-            context.ExecuteCommandBuffer(cmd);
-
-            //release
-            CommandBufferPool.Release(cmd);
         }
 
         // NOTE: This method is part of the compatibility rendering path, please use the Render Graph API above instead.

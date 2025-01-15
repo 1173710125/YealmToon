@@ -4,7 +4,8 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 #include "YealmToonSurface.hlsl"
 
-half _ShadowThreshold;
+half _SpecularThreshold;
+half _BrightShadowThreshold;
 
 //////////////////////////////////////////////////////////////////////////////////////
 // todo：pbr-BRDF光照计算
@@ -16,9 +17,12 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
     mainLight.shadowAttenuation = lerp(mainLight.shadowAttenuation, 1, GetShadowFade(positionWS)); // shadow fade
     half NoL = dot(surfaceData.normalWS, mainLight.direction);
     half NoL01 = NoL * 0.5 + 0.5;
-    half a = step(_ShadowThreshold, NoL01);
-    return a.xxx;
     half3 viewDirWS = GetWorldSpaceNormalizeViewDir(positionWS);
+
+    float3 L = float3(mainLight.direction);
+    float3 H = SafeNormalize(L + float3(viewDirWS));
+    half NoH = saturate(dot(float3(surfaceData.normalWS), H));
+    
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------
@@ -26,8 +30,14 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
 // ------------------------------------------------------------------------------------------------------------------------------------
     // 主平行光
 
-    half3 mainLightColor = (mainLight.distanceAttenuation * mainLight.shadowAttenuation * NoL01) * mainLight.color; // (mainLight.distanceAttenuation * mainLight.shadowAttenuation * NoL) * mainLight.color
-    half3 mainLightResult = mainLightColor;
+    // half3 mainLightColor = (mainLight.distanceAttenuation * mainLight.shadowAttenuation * NoL01) * mainLight.color; // (mainLight.distanceAttenuation * mainLight.shadowAttenuation * NoL) * mainLight.color
+
+    half diffuseStep = step(_BrightShadowThreshold, NoL01);
+    return surfaceData.albedo;
+
+    //half3 stepSpecular = step(_SpecularThreshold, NoH) * surfaceData.albedo;
+    // half3 mainLightResult = diffuse * mainLight.color;
+    return diffuseStep.xxx;
 
     // 额外光
     // lightingData.additionalLightsResult = half3(0, 0, 0);
@@ -69,7 +79,7 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
 //     // 全局光照 SSR and so on
 
 
-    return half4(mainLightResult, 1);
+    // return half4(mainLightResult, 1);
 }
 
 #endif

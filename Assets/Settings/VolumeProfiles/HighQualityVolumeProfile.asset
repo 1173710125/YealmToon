@@ -60,9 +60,12 @@ MonoBehaviour:
   m_Name: YealmToonSettings
   m_EditorClassIdentifier: 
   active: 1
-  shadowThreshold:
+  specularThreshold:
     m_OverrideState: 1
-    m_Value: 0.417
+    m_Value: 0.98
+  brightShadowThreshold:
+    m_OverrideState: 1
+    m_Value: 0
 --- !u!114 &-3357603926938260329
 MonoBehaviour:
   m_ObjectHideFlags: 3

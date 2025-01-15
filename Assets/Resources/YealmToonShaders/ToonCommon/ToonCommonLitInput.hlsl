@@ -5,29 +5,34 @@
 #include "../ToonLib/YealmToonSurface.hlsl"
 
 CBUFFER_START(UnityPerMaterial)
-    float4 _BaseMap_ST;
     half4 _BaseColor;
     half _NormalScale;
 CBUFFER_END
 
 TEXTURE2D(_BaseMap);        SAMPLER(sampler_BaseMap);
 TEXTURE2D(_NormalMap);        SAMPLER(sampler_NormalMap);
+TEXTURE2D(_IDMap);        SAMPLER(sampler_IDMap);
 
-half4 SampleAlbedoAlpha(float2 uv)
+half4 SampleAlbedo(float2 uv)
 {
     return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv);
 }
 
 half3 SampleNormalTS(float2 uv)
 {
-    return UnpackNormalScale(SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, uv), _NormalScale);
+    return UnpackNormalScale(SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, uv), _NormalScale);;
+}
+
+half3 SampleID(float2 uv)
+{
+    return SAMPLE_TEXTURE2D(_IDMap, sampler_IDMap, uv);
 }
 
 inline void InitializeToonSurfaceData(float2 uv, float3 positionWS, half3 tangentWS, half3 bitangentWS, half3 normalWS, inout ToonCommonSurfaceData outSurfaceData)
 {
     // albedo
-    half4 albedoAlpha = SampleAlbedoAlpha(uv);
-    outSurfaceData.albedo = albedoAlpha.rgb;
+    half4 albedo = SampleAlbedo(uv);
+    outSurfaceData.albedo = albedo.rgb * _BaseColor.rgb;
 
     // normal
     outSurfaceData.normalTS = SampleNormalTS(uv);

@@ -8,9 +8,7 @@ struct ToonCommonSurfaceData
     half3 normalTS;
 
     half metallic;
-    half3 emission;
     half roughness;
-
 };
 
 #endif

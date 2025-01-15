@@ -35,7 +35,7 @@ Varyings LitPassVertexCommon(Attributes input)
     output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
-    output.uv.xy = TRANSFORM_TEX(input.texcoord, _BaseMap);
+    output.uv.xy = input.texcoord;
     output.positionCS = TransformWorldToHClip(output.positionWS);
     output.normalWS = normalInput.normalWS;
     output.tangentWS = normalInput.tangentWS;
