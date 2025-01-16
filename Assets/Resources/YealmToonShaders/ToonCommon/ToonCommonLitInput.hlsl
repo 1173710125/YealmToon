@@ -6,7 +6,12 @@
 
 CBUFFER_START(UnityPerMaterial)
     half4 _BaseColor;
+    half4 _ShadowTint;
     half _NormalScale;
+
+    half _OutlineBias;
+    float _OutlineWidth;
+    half4 _OutlineColor;
 CBUFFER_END
 
 TEXTURE2D(_BaseMap);        SAMPLER(sampler_BaseMap);

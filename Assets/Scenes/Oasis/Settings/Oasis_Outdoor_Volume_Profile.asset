@@ -63,6 +63,30 @@ MonoBehaviour:
   - {fileID: 5935297997615179469}
   - {fileID: -4720686990112659349}
   - {fileID: 9109530758031880643}
+  - {fileID: 4990544502408752237}
+--- !u!114 &4990544502408752237
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07e117c8c2c7df44593e208ab25aa81a, type: 3}
+  m_Name: YealmToonSettings
+  m_EditorClassIdentifier: 
+  active: 1
+  specularThreshold:
+    m_OverrideState: 1
+    m_Value: 0.8
+  brightShadowStepRange:
+    m_OverrideState: 1
+    m_Value: {x: 0.058631923, y: 0.25863203}
+  cubeMapParameter:
+    m_OverrideState: 0
+    m_Value: {fileID: 0}
+    dimension: 1
 --- !u!114 &5935297997615179469
 MonoBehaviour:
   m_ObjectHideFlags: 3

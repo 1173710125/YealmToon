@@ -5,7 +5,69 @@
 #include "YealmToonSurface.hlsl"
 
 half _SpecularThreshold;
-half _BrightShadowThreshold;
+half2 _BrightShadowStepRange;
+half _EnvLightingIntensity;
+
+TEXTURECUBE(_EnvCubeMap); SAMPLER(sampler_EnvCubeMap);
+
+//////////////////////////////////////////////////////////////////////////////////////
+// 通用光照函数
+//////////////////////////////////////////////////////////////////////////////////////
+// Most important part: lighting equation, edit it according to your needs, write whatever you want here, be creative!
+// This function will be used by all direct lights (directional/point/spot)
+half3 ShadeSingleLight(ToonCommonSurfaceData surfaceData, Light light, bool isAdditionalLight)
+{
+    half3 N = surfaceData.normalWS;
+    half3 L = light.direction;
+
+    half NoL = dot(N,L);
+
+    // light's distance & angle fade for point light & spot light (see GetAdditionalPerObjectLight(...) in Lighting.hlsl)
+    // Lighting.hlsl -> https://github.com/Unity-Technologies/Graphics/blob/master/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl
+    half distanceAttenuation = min(4,light.distanceAttenuation); //clamp to prevent light over bright if point/spot light too close to vertex
+
+    // N dot L
+    // simplest 1 line cel shade, you can always replace this line by your own method!
+    half litOrShadowArea = smoothstep(_BrightShadowStepRange.x, _BrightShadowStepRange.y, NoL);;
+
+    // occlusion
+    // litOrShadowArea *= surfaceData.occlusion;
+
+    // face ignore celshade since it is usually very ugly using NoL method
+    // litOrShadowArea = _IsFace? lerp(0.5,1,litOrShadowArea) : litOrShadowArea;
+
+    // light's shadow map
+    // litOrShadowArea *= lerp(1,light.shadowAttenuation,_ReceiveShadowMappingAmount);
+
+    half3 litOrShadowColor = lerp(_ShadowTint.rgb, 1, litOrShadowArea);
+
+    half3 lightAttenuationRGB = litOrShadowColor * distanceAttenuation;
+
+    // saturate() light.color to prevent over bright
+    // additional light reduce intensity since it is additive
+    return saturate(light.color) * lightAttenuationRGB * (isAdditionalLight ? 0.25 : 1);
+}
+
+// 暂时只允许基于probe的环境光照
+half3 ShadeEnvLight(ToonCommonSurfaceData surfaceData, bool isFace = false)
+{
+    half3 envDiffuseSampleDir = surfaceData.normalWS;
+    if(isFace)
+    {
+        envDiffuseSampleDir.y = 0;
+    }
+
+    //probe
+    half3 diffuseLight = SAMPLE_TEXTURECUBE(_EnvCubeMap, sampler_EnvCubeMap, envDiffuseSampleDir).rgb;
+
+    // specular
+
+
+    //half3 envDiffuse = bakedGI;
+    // half3 envSpecular = GlossyEnvironmentReflection(reflectVector, brdfData.perceptualRoughness, half(1.0)); probe使用方式？
+    // 不做toon操作，直接加上去，可以柔和光照效果
+    return saturate(diffuseLight * _EnvLightingIntensity);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////
 // todo：pbr-BRDF光照计算
@@ -15,29 +77,16 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
     float4 shadowCoord = TransformWorldToShadowCoord(positionWS);
     Light mainLight = GetMainLight(shadowCoord);
     mainLight.shadowAttenuation = lerp(mainLight.shadowAttenuation, 1, GetShadowFade(positionWS)); // shadow fade
-    half NoL = dot(surfaceData.normalWS, mainLight.direction);
-    half NoL01 = NoL * 0.5 + 0.5;
+
     half3 viewDirWS = GetWorldSpaceNormalizeViewDir(positionWS);
-
-    float3 L = float3(mainLight.direction);
-    float3 H = SafeNormalize(L + float3(viewDirWS));
-    half NoH = saturate(dot(float3(surfaceData.normalWS), H));
-    
-
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------直接光照------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------------------
     // 主平行光
+    half3 mainLightResult = ShadeSingleLight(surfaceData, mainLight, false);
 
-    // half3 mainLightColor = (mainLight.distanceAttenuation * mainLight.shadowAttenuation * NoL01) * mainLight.color; // (mainLight.distanceAttenuation * mainLight.shadowAttenuation * NoL) * mainLight.color
-
-    half diffuseStep = step(_BrightShadowThreshold, NoL01);
-    return surfaceData.albedo;
-
-    //half3 stepSpecular = step(_SpecularThreshold, NoH) * surfaceData.albedo;
-    // half3 mainLightResult = diffuse * mainLight.color;
-    return diffuseStep.xxx;
+    // half3 stepSpecular = step(_SpecularThreshold, NoH) * diffuse;
 
     // 额外光
     // lightingData.additionalLightsResult = half3(0, 0, 0);
@@ -61,25 +110,17 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
     //     #endif
     // #endif
 
-// // ------------------------------------------------------------------------------------------------------------------------------------
-// // ------------------------------------------------------------环境光照------------------------------------------------------------------
-// // ------------------------------------------------------------------------------------------------------------------------------------
-//     // 天空环境光
-//     // half3 skyboxLighting = CalculateSkyboxIrradiance(surfaceData.normalWS);
-//     // lightingData.skyboxLightResult =  skyboxLighting * brdfData.brdfDiffuse; 
-
-//     // reflection probe
-//     // half NoV = saturate(dot(surfaceData.normalWS, viewDirWS));
-//     // half3 reflectVector = reflect(-viewDirWS, surfaceData.normalWS);
-//     // half3 probeSpecularLighting = CalculateProbeIrradiance(reflectVector, positionWS, brdfData.roughness, normalizedScreenSpaceUV, skyboxLighting);
-//     // half3 EnvironmentBRDF = calEnvBRDF(brdfData, NoV); 
-//     // lightingData.probesLightResult = probeSpecularLighting * EnvironmentBRDF * brdfData.metallic; // * metallic 魔道做法用金属度相乘 使得非金属 不会受到probe影响
+// ------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------环境光照------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------
+    // 天空环境光diffuse
+    half3 envLightResult = ShadeEnvLight(surfaceData);
 
 
 //     // 全局光照 SSR and so on
 
-
-    // return half4(mainLightResult, 1);
+    // return envLightResult;
+    return (mainLightResult + envLightResult) * surfaceData.albedo;
 }
 
 #endif
