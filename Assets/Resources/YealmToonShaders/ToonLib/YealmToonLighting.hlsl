@@ -8,11 +8,38 @@ half _SpecularThreshold;
 half2 _BrightShadowStepRange;
 half _EnvLightingIntensity;
 
+half4 _UpPartSkyColor;
+half4 _DownPartSkyColor;
+half4 _UndergroundPartSkyColor;
+
 TEXTURECUBE(_EnvCubeMap); SAMPLER(sampler_EnvCubeMap);
 
 //////////////////////////////////////////////////////////////////////////////////////
 // 通用光照函数
 //////////////////////////////////////////////////////////////////////////////////////
+
+half3 ShadeRimLight(ToonCommonSurfaceData surfaceData, half3 viewDirWS, bool blendAlbedo = false)
+{
+    half NoV = dot(surfaceData.normalWS, viewDirWS);
+    half rimStrength = 1.0 - smoothstep(_RimLightThreshold, _RimLightThreshold + _RimLightFadeSpeed, NoV);
+    half3 rimColor = lerp(0, _RimLightColor, rimStrength);
+
+    return rimColor;
+}
+
+// env diffuse
+half3 CalculateSkyboxIrradiance(half3 normalWS)
+{
+    //室外lerp三个位置的颜色
+    half up = dot(normalWS, half3(0.0, 1.0, 0.0));
+    half down = -up;
+    up = max(0, up);
+    down = max(0, down);
+    half mid = 1.0 - up - down;
+    half3 env = _UpPartSkyColor.rgb * up + _DownPartSkyColor.rgb * mid + _UndergroundPartSkyColor.rgb * down;
+    return env * _EnvLightingIntensity;
+}
+
 // Most important part: lighting equation, edit it according to your needs, write whatever you want here, be creative!
 // This function will be used by all direct lights (directional/point/spot)
 half3 ShadeSingleLight(ToonCommonSurfaceData surfaceData, Light light, bool isAdditionalLight)
@@ -48,17 +75,11 @@ half3 ShadeSingleLight(ToonCommonSurfaceData surfaceData, Light light, bool isAd
     return saturate(light.color) * lightAttenuationRGB * (isAdditionalLight ? 0.25 : 1);
 }
 
-// 暂时只允许基于probe的环境光照
+// 环境光计算
 half3 ShadeEnvLight(ToonCommonSurfaceData surfaceData, bool isFace = false)
 {
-    half3 envDiffuseSampleDir = surfaceData.normalWS;
-    if(isFace)
-    {
-        envDiffuseSampleDir.y = 0;
-    }
-
-    //probe
-    half3 diffuseLight = SAMPLE_TEXTURECUBE(_EnvCubeMap, sampler_EnvCubeMap, envDiffuseSampleDir).rgb;
+    // diffuse
+    half3 diffuseLight = CalculateSkyboxIrradiance(surfaceData.normalWS);
 
     // specular
 
@@ -66,7 +87,7 @@ half3 ShadeEnvLight(ToonCommonSurfaceData surfaceData, bool isFace = false)
     //half3 envDiffuse = bakedGI;
     // half3 envSpecular = GlossyEnvironmentReflection(reflectVector, brdfData.perceptualRoughness, half(1.0)); probe使用方式？
     // 不做toon操作，直接加上去，可以柔和光照效果
-    return saturate(diffuseLight * _EnvLightingIntensity);
+    return saturate(diffuseLight);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -115,6 +136,11 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
 // ------------------------------------------------------------------------------------------------------------------------------------
     // 天空环境光diffuse
     half3 envLightResult = ShadeEnvLight(surfaceData);
+
+    // 环境光spe by probe
+
+    // 边缘光
+    // half3 rimLightResult = ShadeRimLight(surfaceData, viewDirWS);
 
 
 //     // 全局光照 SSR and so on

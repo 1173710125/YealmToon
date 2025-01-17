@@ -2,18 +2,26 @@ Shader "YealmToon/CommonOpaque"
 {
     Properties
     {
+        // 剔除设置
+        [Header(Base Setting)]
+        [Enum(UnityEngine.Rendering.CullMode)] _CullMode ("剔除模式", Float) = 0
+
         [Header(Base Color)]
         [NoScaleOffset] _BaseMap("BaseMap", 2D) = "white" {}
         _BaseColor("baseColor", Color) = (1,1,1,1)
-        
+
         _ShadowTint("shadowTint", Color) = (0.7,0.7,0.7,1)
 
         _NormalScale("normal scale", Float) = 1.0
         [NoScaleOffset]_NormalMap ("normal", 2D) = "bump" {}
 
-        [NoScaleOffset]_IDMap ("IDMap", 2D) = "white" {}
+        [Header(Rim Light)]
+        [HDR]_RimLightColor("边缘光颜色", Color) = (1,1,1,1)
+        _RimLightThreshold("边缘光界限", Range(-1, 1)) = 0.1
+        _RimLightFadeSpeed("边缘光衰减速度", Range(0, 0.5)) = 0.02
 
-        _OutlineWidth("描边宽度", Range(0, 0.01)) = 0.0001
+        [Header(Outline)]
+        _OutlineWidth("描边宽度", Range(0, 10)) = 1
         _OutlineColor("描边颜色", Color) = (1,0,0,1)
     }
     SubShader
@@ -37,7 +45,7 @@ Shader "YealmToon/CommonOpaque"
             // Render State Commands
             // Use same blending / depth states as Standard shader
             ZWrite Off
-            Cull Off
+            Cull [_CullMode]
             ZTest LEqual
 
             HLSLPROGRAM
@@ -97,7 +105,7 @@ Shader "YealmToon/CommonOpaque"
             ZWrite On
             ZTest LEqual
             ColorMask 0
-            Cull Off
+            Cull [_CullMode]
 
             HLSLPROGRAM
             #pragma target 2.0
@@ -143,7 +151,7 @@ Shader "YealmToon/CommonOpaque"
             // Render State Commands
             ZWrite On
             ColorMask R
-            Cull Off
+            Cull [_CullMode]
 
             HLSLPROGRAM
             #pragma target 2.0
@@ -165,6 +173,9 @@ Shader "YealmToon/CommonOpaque"
             //--------------------------------------
             // GPU Instancing
             #pragma multi_compile_instancing
+
+            // defines
+            #define ToonShaderIsOutline
 
             // -------------------------------------
             // Includes
@@ -191,8 +202,8 @@ Shader "YealmToon/CommonOpaque"
 
             // -------------------------------------
             // Shader Stages
-            #pragma vertex ToonOutlineVertex
-            #pragma fragment ToonOutlineFragment
+            #pragma vertex LitPassVertexCommon
+            #pragma fragment LitPassFragmentCommon
 
             // -------------------------------------
             // Material Keywords
@@ -206,12 +217,15 @@ Shader "YealmToon/CommonOpaque"
             // GPU Instancing
             #pragma multi_compile_instancing
 
+            // defines
+            #define ToonShaderIsOutline
+
             // -------------------------------------
             // Includes
             #include "ToonCommonLitInput.hlsl"
-            #include "ToonCommonOutlinePass.hlsl"
+            #include "ToonCommonLitForwardPass.hlsl"
             ENDHLSL
         }
     }
-    FallBack "Diffuse"
+
 }
