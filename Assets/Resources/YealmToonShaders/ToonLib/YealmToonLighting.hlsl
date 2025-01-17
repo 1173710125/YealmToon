@@ -42,7 +42,7 @@ half3 CalculateSkyboxIrradiance(half3 normalWS)
 
 // Most important part: lighting equation, edit it according to your needs, write whatever you want here, be creative!
 // This function will be used by all direct lights (directional/point/spot)
-half3 ShadeSingleLight(ToonCommonSurfaceData surfaceData, Light light, bool isAdditionalLight)
+half3 ShadeSingleLight(ToonCommonSurfaceData surfaceData, Light light, bool isAdditionalLight = false)
 {
     half3 N = surfaceData.normalWS;
     half3 L = light.direction;
@@ -51,7 +51,10 @@ half3 ShadeSingleLight(ToonCommonSurfaceData surfaceData, Light light, bool isAd
 
     // light's distance & angle fade for point light & spot light (see GetAdditionalPerObjectLight(...) in Lighting.hlsl)
     // Lighting.hlsl -> https://github.com/Unity-Technologies/Graphics/blob/master/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl
-    half distanceAttenuation = min(4,light.distanceAttenuation); //clamp to prevent light over bright if point/spot light too close to vertex
+    half distanceAttenuation = 1;
+    if(isAdditionalLight == true)
+        distanceAttenuation = min(4,light.distanceAttenuation); //clamp to prevent light over bright if point/spot light too close to vertex
+
 
     // N dot L
     // simplest 1 line cel shade, you can always replace this line by your own method!

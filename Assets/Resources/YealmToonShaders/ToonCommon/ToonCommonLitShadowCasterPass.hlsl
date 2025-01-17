@@ -23,7 +23,7 @@ struct Attributes
 
 struct Varyings
 {
-    #if defined(_ALPHATEST_ON)
+    #if defined(_ALPHA_CLIP)
         float2 uv       : TEXCOORD0;
     #endif
     float4 positionCS   : SV_POSITION;
@@ -52,8 +52,8 @@ Varyings ShadowPassVertex(Attributes input)
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
 
-    #if defined(_ALPHATEST_ON)
-    output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
+    #if defined(_ALPHA_CLIP)
+    output.uv = input.texcoord;
     #endif
 
     output.positionCS = GetShadowPositionHClip(input);
@@ -64,8 +64,9 @@ half4 ShadowPassFragment(Varyings input) : SV_TARGET
 {
     UNITY_SETUP_INSTANCE_ID(input);
 
-    #if defined(_ALPHATEST_ON)
-        Alpha(SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap)).a, _BaseColor, _Cutoff);
+    #ifdef _ALPHA_CLIP
+        half alpha = SampleAlbedoAlpha(input.uv).a;
+        clip(alpha - 0.5h);
     #endif
 
     // #if defined(LOD_FADE_CROSSFADE)

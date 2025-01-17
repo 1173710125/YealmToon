@@ -33,8 +33,6 @@ Varyings LitPassVertexCommon(Attributes input)
 {
     Varyings output = (Varyings)0;
 
-    output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
-
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS);
     output.positionWS = vertexInput.positionWS;
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
@@ -71,7 +69,7 @@ Varyings LitPassVertexCommon(Attributes input)
     // outlineZOffsetMask = invLerpClamp(_OutlineZOffsetMaskRemapStart,_OutlineZOffsetMaskRemapEnd,outlineZOffsetMask);// allow user to flip value or remap
 
     // // [Apply ZOffset, Use remapped value as ZOffset mask]
-    // output.positionCS = NiloGetNewClipPosWithZOffset(output.positionCS, _OutlineZOffset * outlineZOffsetMask + 0.03 * _IsFace);
+    output.positionCS = NiloGetNewClipPosWithZOffset(output.positionCS, 0.01);// + 0.03 * _IsFace
 #endif
 
     output.normalWS = normalInput.normalWS;
@@ -99,7 +97,7 @@ void LitPassFragmentCommon(
 
     // 描边颜色
     #ifdef ToonShaderIsOutline
-        toonLighting = _OutlineColor; // 考虑是否 *toonLighting
+        toonLighting *= _OutlineColor; // 考虑是否 *toonLighting
     #endif
 
     // 雾效

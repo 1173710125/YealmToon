@@ -5,6 +5,7 @@ Shader "YealmToon/CommonOpaque"
         // 剔除设置
         [Header(Base Setting)]
         [Enum(UnityEngine.Rendering.CullMode)] _CullMode ("剔除模式", Float) = 0
+        [Toggle(_ALPHA_CLIP)] _AlphaTest ("透明度测试", float) = 0
 
         [Header(Base Color)]
         [NoScaleOffset] _BaseMap("BaseMap", 2D) = "white" {}
@@ -130,7 +131,7 @@ Shader "YealmToon/CommonOpaque"
             // This is used during shadow map generation to differentiate between directional and punctual light shadows, as they use different formulas to apply Normal Bias
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
 
-            #pragma shader_feature_local_fragment _ _ALPHA_CLIP
+            #pragma shader_feature_local _ _ALPHA_CLIP
 
             // -------------------------------------
             // Includes
@@ -168,7 +169,7 @@ Shader "YealmToon/CommonOpaque"
             // Unity defined keywords
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             
-            #pragma shader_feature_local_fragment _ _ALPHA_CLIP
+            #pragma shader_feature_local _ _ALPHA_CLIP
 
             //--------------------------------------
             // GPU Instancing

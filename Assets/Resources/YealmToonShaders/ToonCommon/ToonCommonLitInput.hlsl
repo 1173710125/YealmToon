@@ -20,7 +20,7 @@ CBUFFER_END
 TEXTURE2D(_BaseMap);        SAMPLER(sampler_BaseMap);
 TEXTURE2D(_NormalMap);        SAMPLER(sampler_NormalMap);
 
-half4 SampleAlbedo(float2 uv)
+half4 SampleAlbedoAlpha(float2 uv)
 {
     return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv);
 }
@@ -34,8 +34,8 @@ half3 SampleNormalTS(float2 uv)
 inline void InitializeToonSurfaceData(float2 uv, float3 positionWS, half3 tangentWS, half3 bitangentWS, half3 normalWS, inout ToonCommonSurfaceData outSurfaceData)
 {
     // albedo
-    half4 albedo = SampleAlbedo(uv);
-    outSurfaceData.albedo = albedo.rgb * _BaseColor.rgb;
+    half4 albedoAlpha = SampleAlbedoAlpha(uv);
+    outSurfaceData.albedo = albedoAlpha.rgb * _BaseColor.rgb;
 
     // normal
     outSurfaceData.normalTS = SampleNormalTS(uv);
