@@ -82,7 +82,7 @@ half3 ShadeSingleLight(ToonCommonSurfaceData surfaceData, Light light, bool isAd
 half3 ShadeEnvLight(ToonCommonSurfaceData surfaceData, bool isFace = false)
 {
     // diffuse
-    half3 diffuseLight = CalculateSkyboxIrradiance(surfaceData.normalWS);
+    half3 diffuseLight = _UpPartSkyColor.rgb * _EnvLightingIntensity;
 
     // specular
 
@@ -149,7 +149,7 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
 //     // 全局光照 SSR and so on
 
     // return envLightResult;
-    return (mainLightResult + envLightResult) * surfaceData.albedo;
+    return max(mainLightResult, envLightResult) * surfaceData.albedo;
 }
 
 #endif
