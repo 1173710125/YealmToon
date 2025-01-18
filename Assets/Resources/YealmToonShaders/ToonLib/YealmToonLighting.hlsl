@@ -68,6 +68,7 @@ half3 ShadeSingleLight(ToonCommonSurfaceData surfaceData, Light light, bool isAd
 
     // light's shadow map
     // litOrShadowArea *= lerp(1,light.shadowAttenuation,_ReceiveShadowMappingAmount);
+    litOrShadowArea *= light.shadowAttenuation;
 
     half3 litOrShadowColor = lerp(_ShadowTint.rgb, 1, litOrShadowArea);
 
@@ -82,7 +83,7 @@ half3 ShadeSingleLight(ToonCommonSurfaceData surfaceData, Light light, bool isAd
 half3 ShadeEnvLight(ToonCommonSurfaceData surfaceData, bool isFace = false)
 {
     // diffuse
-    half3 diffuseLight = _UpPartSkyColor.rgb * _EnvLightingIntensity;
+    half3 diffuseLight = _DownPartSkyColor.rgb * _EnvLightingIntensity;
 
     // specular
 
