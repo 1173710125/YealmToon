@@ -164,15 +164,16 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
     return max(mainLightResult, envLightResult) * surfaceData.albedo;
 }
 
-half3 calToonEyeLighting(ToonEyeSurfaceData surfaceData, float3 positionWS, float2 normalizedScreenSpaceUV)
+half3 calToonEyeLighting(ToonEyeSurfaceData surfaceData, float3 positionWS, float2 normalizedScreenSpaceUV, float2 HighlightUV)
 {
     float4 shadowCoord = TransformWorldToShadowCoord(positionWS);
     Light mainLight = GetMainLight(shadowCoord);
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(positionWS);
     
     half3 finalColor = half3(0, 0, 0);
 
     // mainLight
-    half3 mainLightResult = ShadeSingleLight(_FaceFrontDirection, mainLight, false);
+    half3 mainLightResult = ShadeSingleLight(surfaceData.faceFrontDirection, mainLight, false);
     finalColor += mainLightResult * surfaceData.albedo;
 
     // #if defined(_ADDITIONAL_LIGHTS)
@@ -205,24 +206,29 @@ half3 calToonEyeLighting(ToonEyeSurfaceData surfaceData, float3 positionWS, floa
     // LIGHT_LOOP_END
     // #endif
 
+    half3 viewParallax = abs(normalize(TransformWorldToViewDir(viewDirWS)));
     // 高光
-    #ifdef _EYE_HIGHLIGHT_MAP
+    #ifdef _EYE_HIGHLIGHT
         half3 lightParallax = normalize(TransformWorldToViewDir(mainLight.direction));
         half3 eyeH = normalize(viewParallax + lightParallax);
-        half eyeNdotHFlat = (dot(eyeH, -inputData.frontDirectionWS));
+        half eyeNdotHFlat = dot(eyeH, -surfaceData.faceFrontDirection);
         
-        float2 eyeHighlightUV = inputData.uv;
-        float maxRotation = inputData.eyeHighlightRotateDegree;
-        eyeHighlightUV = RotateUVDeg(eyeHighlightUV, float2(0.5,0.5),min(eyeNdotHFlat.x * maxRotation, maxRotation));
-        real4 eyeHighlightCtrl = SAMPLE_TEXTURE2D_X(_EyeHighlightMap1, sampler_EyeHighlightMap1, eyeHighlightUV).rgba;
-        real3 eyeHighlightCol = (1.0 - inputData.highLightAlphaClip) * eyeHighlightCtrl.rgb +
-            inputData.highLightAlphaClip * eyeHighlightCtrl.rgb * step(0.5, eyeHighlightCtrl.a);
-        real eyeNdotLFlat = max(saturate(dot(inputData.frontDirectionWS, mainLight.direction)), 0.1);
-        finalColor += eyeHighlightCol * lerp(inputData.eyeHighlightColor.rgb, eyeNdotLFlat * inputData.eyeHighlightColor.rgb, inputData.highlightDarken);
+        float2 eyeHighlightUV = HighlightUV;
+        // 考虑下后面需不需要这种高光旋转的操作，需要贴图以及UV满足一定条件
+        // float maxRotation = inputData.eyeHighlightRotateDegree;
+        // eyeHighlightUV = RotateUVDeg(eyeHighlightUV, float2(0.5,0.5),min(eyeNdotHFlat.x * maxRotation, maxRotation));
+        half3 eyeHighlightCol = SAMPLE_TEXTURE2D_X(_HighlightMap, sampler_HighlightMap, eyeHighlightUV).rgb * _HighlightColorTint;
+        eyeHighlightCol *= _HighlightColorTint;
+
+        half eyeNoL = saturate(dot(surfaceData.faceFrontDirection, mainLight.direction));
+
+        eyeHighlightCol = lerp(eyeHighlightCol, eyeNoL * eyeHighlightCol, surfaceData.highlightDarken);
+        finalColor += eyeHighlightCol;
 
     #endif
 
-    // matcap环境光
+    // EnvSpecular
+    // 不想用matcap方式，可否使用probe的方式解决？
     // finalColor += MatCapHightlight(inputData, mainLight) * lerp(1, inputData.pupilMask, inputData.usePupilMask);
 
     return finalColor;;

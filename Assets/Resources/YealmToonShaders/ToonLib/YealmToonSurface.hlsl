@@ -9,6 +9,8 @@ struct ToonCommonSurfaceData
 
     half metallic;
     half roughness;
+
+    half3 faceFrontDirection;
 };
 
 struct ToonEyeSurfaceData
@@ -17,7 +19,9 @@ struct ToonEyeSurfaceData
 
     half3 matcapNormalWS;
 
-    half3 highlightSpecular;
+    half3 faceFrontDirection;
+
+    half highlightDarken;
 };
 
 #endif

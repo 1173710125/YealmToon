@@ -9,11 +9,11 @@ CBUFFER_START(UnityPerMaterial)
     half4 _ShadowTint;
 
     half4 _HighlightColorTint;
+    half _HighlightDarken;
     half _MatcapReflectionStrength;
     half _MatcapNormalScale;
 
     half3 _FaceFrontDirection;
-    half3 _FaceRightDirection;
 CBUFFER_END
 
 TEXTURE2D(_BaseMap);        SAMPLER(sampler_BaseMap);
@@ -31,10 +31,6 @@ half3 SampleNormalTS(float2 uv)
     return UnpackNormalScale(SAMPLE_TEXTURE2D(_MatcapNormalMap, sampler_MatcapNormalMap, uv), _MatcapNormalScale);
 }
 
-half3 SampleHighlight(float2 uv)
-{
-    return SAMPLE_TEXTURE2D(_HighlightMap, sampler_HighlightMap, uv);
-}
 
 
 
@@ -58,8 +54,8 @@ inline void InitializeToonSurfaceData(float2 uv, float3 positionWS, half3 tangen
     outSurfaceData.matcapNormalWS = TransformTangentToWorld(normalTS, tangentToWorld);
     outSurfaceData.matcapNormalWS = NormalizeNormalPerPixel(outSurfaceData.matcapNormalWS);
 
-    // highlight
-    outSurfaceData.highlightSpecular = SampleHighlight(uv) * _HighlightColorTint.rgb;
+    outSurfaceData.faceFrontDirection = _FaceFrontDirection;
+    outSurfaceData.highlightDarken = _HighlightDarken;
 }
 
 #endif

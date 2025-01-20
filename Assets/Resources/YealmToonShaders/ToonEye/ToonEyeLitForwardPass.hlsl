@@ -60,7 +60,7 @@ void LitPassFragmentEye(
 
 
     // BRDF光照结果
-    half3 toonLighting = calToonEyeLighting(toonEyeSurfaceData, input.positionWS, screenUV);
+    half3 toonLighting = calToonEyeLighting(toonEyeSurfaceData, input.positionWS, screenUV, input.uv);
 
 
     // 雾效

@@ -16,6 +16,7 @@ Shader "YealmToon/Eye"
         [Toggle(_EYE_HIGHLIGHT)] _EyeHighlight ("开启眼睛高光", float) = 0
         [NoScaleOffset] _HighlightMap("HighlightMap", 2D) = "white" {}
         [HDR]_HighlightColorTint("HighlightColorTint", Color) = (1,1,1,1)
+        _HighlightDarken ("HighlightDarken", Range(0, 1)) = 0.1
 
         [Header(MatCap Reflection)]
         [Toggle(_MATCAP_REFLECTION)] _MatcapReflection ("开启眼睛matcap", float) = 0
@@ -69,6 +70,11 @@ Shader "YealmToon/Eye"
             #pragma multi_compile _ _FORWARD_PLUS
             #pragma multi_compile _ _LIGHT_LAYERS
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
+
+            // ---------------------------------------
+            // 自定义变体
+            #pragma multi_compile _ _EYE_HIGHLIGHT
+            #pragma multi_compile _ _MATCAP_REFLECTION
 
             // #pragma multi_compile_fragment _ _LIGHT_COOKIES
             #include_with_pragmas "Packages/com.unity.render-pipelines.core/ShaderLibrary/FoveatedRenderingKeywords.hlsl"
