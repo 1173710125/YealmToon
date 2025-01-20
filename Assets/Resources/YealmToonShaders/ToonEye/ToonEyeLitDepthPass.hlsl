@@ -1,5 +1,5 @@
-#ifndef TOON_COMMON_DEPTH_PASS_INCLUDED
-#define TOON_COMMON_DEPTH_PASS_INCLUDED
+#ifndef TOON_EYE_DEPTH_PASS_INCLUDED
+#define TOON_EYE_DEPTH_PASS_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #if defined(LOD_FADE_CROSSFADE)

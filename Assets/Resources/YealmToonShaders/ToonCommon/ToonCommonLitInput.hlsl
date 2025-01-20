@@ -9,10 +9,6 @@ CBUFFER_START(UnityPerMaterial)
     half4 _ShadowTint;
     half _NormalScale;
 
-    half4 _RimLightColor;
-    half _RimLightThreshold;
-    half _RimLightFadeSpeed;
-
     float _OutlineWidth;
     half4 _OutlineColor;
 CBUFFER_END

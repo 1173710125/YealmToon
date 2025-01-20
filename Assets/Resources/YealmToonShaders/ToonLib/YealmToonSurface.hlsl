@@ -11,4 +11,13 @@ struct ToonCommonSurfaceData
     half roughness;
 };
 
+struct ToonEyeSurfaceData
+{
+    half3 albedo;
+
+    half3 matcapNormalWS;
+
+    half3 highlightSpecular;
+};
+
 #endif

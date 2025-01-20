@@ -480,6 +480,7 @@ real4 UniversalFragmentToonLit(ASPInputData inputData, bool overrideGIColor)
 real4 UniversalFragmentToonEyeLit(ASPInputData inputData, bool overrideGIColor)
 {
     Light mainLight = GetMainLight(inputData.shadowCoord, inputData.positionWS, inputData.shadowMask);
+    
     #ifdef _RECEIVE_OFFSETED_SHADOW_ON
     HandleOffsetShadow(inputData, mainLight);
     #endif
@@ -530,7 +531,7 @@ real4 UniversalFragmentToonEyeLit(ASPInputData inputData, bool overrideGIColor)
     inputData.albedo.rgb = inputData.baseColor.rgb * sampledAlbedo.rgb;
     inputData.albedo.a = sampledAlbedo.a;
     InitializeBRDFData(inputData.albedo.rgb, inputData.metallic, 0, inputData.smoothness, inputData.albedo.a, brdfData);
-
+    
     half3 giColor = overrideGIColor
                         ? inputData.bakedGI * inputData.albedo.rgb * inputData.occlusion
                         : GlobalIllumination(brdfData, inputData.bakedGI, inputData.occlusion, inputData.positionWS,
