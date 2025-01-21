@@ -10,29 +10,18 @@ CBUFFER_START(UnityPerMaterial)
 
     half4 _HighlightColorTint;
     half _HighlightDarken;
-    half _MatcapReflectionStrength;
-    half _MatcapNormalScale;
 
     half3 _FaceFrontDirection;
 CBUFFER_END
 
 TEXTURE2D(_BaseMap);        SAMPLER(sampler_BaseMap);
 TEXTURE2D(_HighlightMap);        SAMPLER(sampler_HighlightMap);
-TEXTURE2D(_MatcapNormalMap);        SAMPLER(sampler_MatcapNormalMap);
-TEXTURE2D(_MatcapReflectionMap);        SAMPLER(sampler_MatcapReflectionMap);
+TEXTURE2D(_RampLightingMap);        SAMPLER(sampler_RampLightingMap);
 
 half4 SampleAlbedoAlpha(float2 uv)
 {
     return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv);
 }
-
-half3 SampleNormalTS(float2 uv)
-{
-    return UnpackNormalScale(SAMPLE_TEXTURE2D(_MatcapNormalMap, sampler_MatcapNormalMap, uv), _MatcapNormalScale);
-}
-
-
-
 
 inline void InitializeToonSurfaceData(float2 uv, float3 positionWS, half3 tangentWS, half3 bitangentWS, half3 normalWS, inout ToonEyeSurfaceData outSurfaceData)
 {
@@ -47,13 +36,7 @@ inline void InitializeToonSurfaceData(float2 uv, float3 positionWS, half3 tangen
     half4 albedoAlpha = SampleAlbedoAlpha(uv);
     outSurfaceData.albedo = albedoAlpha.rgb * _BaseColor.rgb;
 
-    // matcap
-    half3 normalTS = SampleNormalTS(uv);
-    half3x3 tangentToWorld = half3x3(tangentWS.xyz, bitangentWS.xyz, normalWS.xyz);
-
-    outSurfaceData.matcapNormalWS = TransformTangentToWorld(normalTS, tangentToWorld);
-    outSurfaceData.matcapNormalWS = NormalizeNormalPerPixel(outSurfaceData.matcapNormalWS);
-
+    // other
     outSurfaceData.faceFrontDirection = _FaceFrontDirection;
     outSurfaceData.highlightDarken = _HighlightDarken;
 }

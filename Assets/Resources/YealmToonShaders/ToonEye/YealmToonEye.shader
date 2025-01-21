@@ -18,13 +18,6 @@ Shader "YealmToon/Eye"
         [HDR]_HighlightColorTint("HighlightColorTint", Color) = (1,1,1,1)
         _HighlightDarken ("HighlightDarken", Range(0, 1)) = 0.1
 
-        [Header(MatCap Reflection)]
-        [Toggle(_MATCAP_REFLECTION)] _MatcapReflection ("开启眼睛matcap", float) = 0
-        [NoScaleOffset] _MatcapReflectionMap("MatcapReflectionMap", 2D) = "white" {}
-        _MatcapReflectionStrength ("MatcapReflectionStrength", Range(0, 2)) = 0
-        [NoScaleOffset] _MatcapNormalMap("MatcapNormalMap", 2D) = "white" {}
-        _MatcapNormalScale ("MatcapNormalScale", Range(0, 2)) = 1
-
 
     }
     SubShader

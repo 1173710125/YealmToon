@@ -33,6 +33,7 @@ Material:
   m_InvalidKeywords:
   - _DEBUGPUPILMASK
   - _EYESTYLE_FLATLIGHTING
+  - _EYESTYLE_LAMBERTLIGHTING
   - _EYE_HIGHLIGHT_MAP_1
   - _FLATTENADDITIONALLIGHTING
   - _HIGHLIGHTALPHACLIP
@@ -265,7 +266,7 @@ Material:
     - _EnableParallaxEffect: 0
     - _EnableSSSRamp: 0
     - _EnvironmentReflections: 1
-    - _EyeHighlightRotateDegree: 20
+    - _EyeHighlightRotateDegree: 18.9
     - _FOVShiftX: 0
     - _FaceShadowMapPow: 0.2
     - _FaceShadowSmoothness: 0
@@ -337,7 +338,7 @@ Material:
     - _LightDirection_MaskOn: 0
     - _M_Color: 0
     - _MatCap: 0
-    - _MatCapReflectionStrength: 0.436
+    - _MatCapReflectionStrength: 0.65
     - _MatCapRollStabilize: 1
     - _MatCap_Color: 0
     - _MaterialID: 4
@@ -434,7 +435,7 @@ Material:
     - _WorkflowSpace: 1
     - _ZTest: 4
     - _ZWrite: 1
-    - _eyeStyle: 1
+    - _eyeStyle: 0
     - _eyeStyleTitle: 0
     - _simpleUI: 0
     - _style: 1
@@ -447,14 +448,14 @@ Material:
     - _AlphaClipUVCtrl: {r: 1, g: 0, b: 0, a: 0}
     - _Ap_RimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _CharacterCenterWS: {r: 0.411, g: 0, b: -2.5, a: 0}
+    - _CharacterCenterWS: {r: 0, g: 0, b: -2.5, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _ColorShift: {r: 0, g: 0, b: 0, a: 1}
     - _DefaultUVChannelCtrl: {r: 1, g: 0, b: 0, a: 0}
     - _DepthRimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Emissive_Color: {r: 0, g: 0, b: 0, a: 1}
-    - _EyeHighlightColor: {r: 19.468575, g: 19.468575, b: 19.468575, a: 1}
+    - _EyeHighlightColor: {r: 25.992073, g: 25.992073, b: 25.992073, a: 1}
     - _FaceFrontDirection: {r: 0.0000007678469, g: 0.03603113, b: 0.99935067, a: 0}
     - _FaceRightDirection: {r: 1, g: -0.0000011744269, b: -0.00000072600244, a: 0}
     - _FaceUVCtrl: {r: 0, g: 1, b: 0, a: 0}

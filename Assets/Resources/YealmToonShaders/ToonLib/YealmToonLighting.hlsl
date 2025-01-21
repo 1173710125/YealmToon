@@ -15,30 +15,70 @@ half4 _UndergroundPartSkyColor;
 TEXTURECUBE(_EnvCubeMap); SAMPLER(sampler_EnvCubeMap);
 
 //////////////////////////////////////////////////////////////////////////////////////
-// 通用光照函数
+// face光照 only
 //////////////////////////////////////////////////////////////////////////////////////
 
-// matcap
-real3 MatCapHightlight()
+half FaceShadowMapAttenuation(ToonFaceSurfaceData surfaceData, Light light)
 {
-    // #ifdef _MATCAP_HIGHLIGHT_MAP
-    // float3 matcapUp = mul((float3x3)UNITY_MATRIX_I_V, float3(0, 1, 0));
-    // float3 matcapRollFixedUp = float3(0, 1, 0);
-    // float rollStabilizeFactor = 1.0 - saturate(dot(matcapUp, matcapRollFixedUp));
-    // matcapUp = lerp(matcapUp, matcapRollFixedUp, rollStabilizeFactor * inputData.matCapRollStabilize);
+    float3 lightDir = light.direction.xyz;
+    half3 front = surfaceData.faceFrontDirection;
+    half3 right = surfaceData.faceRightDirection;
 
-    // float3 right = normalize(cross(matcapUp, -inputData.viewDirectionWS));
-    // matcapUp = cross(-inputData.viewDirectionWS, right);
-    // float2 matcapUV = mul(float3x3(right, matcapUp, inputData.viewDirectionWS), inputData.matCapNormalWS).xy;
-    // matcapUV = matcapUV * 0.5 + 0.5;
-    // float4 matcapRGBA = SAMPLE_TEXTURE2D(_MatCapReflectionMap, sampler_MatCapReflectionMap, matcapUV);
-    // //TODO add option to handle shadowed matcap highlight
-    // matcapRGBA *= inputData.matCapReflectionStrength;
-    // return matcapRGBA.rgb * matcapRGBA.a;
-    // #else
-    return real3(0,0,0);
-    // #endif
+    half faceShadowValue1 = surfaceData.faceShadowValue1;
+    half faceShadowValue2 = surfaceData.faceShadowValue2;
+
+
+    bool switchShadow = (dot(normalize(right.xz), normalize(lightDir.xz))) > 0;
+    half flippedFaceShadow = switchShadow ? faceShadowValue2 : faceShadowValue1;
+
+    float lightAngleHorizontal = acos(dot(normalize(front.xz),  normalize(lightDir.xz))); // 存疑，歪头情况下是不是就出错了
+    float threshold = lightAngleHorizontal / 3.141592653;
+    threshold = pow(threshold, max(1 / surfaceData.faceShadowPow, 0));
+
+    float lightAttenuation = saturate(smoothstep(threshold - surfaceData.faceShadowSmoothness,
+                                                 threshold + surfaceData.faceShadowSmoothness, flippedFaceShadow));
+
+    return 1.0 - lightAttenuation;
 }
+
+half3 ShadeSingleLightFace(ToonFaceSurfaceData surfaceData, Light light, bool isAdditionalLight)
+{
+    half3 N = surfaceData.normalWS;
+    half3 L = light.direction;
+
+    half NoL01 = dot(N,L) * 0.5 + 0.5;
+
+    // light's distance & angle fade for point light & spot light (see GetAdditionalPerObjectLight(...) in Lighting.hlsl)
+    half distanceAttenuation = 1;
+    if(isAdditionalLight == true)
+        distanceAttenuation = min(4,light.distanceAttenuation); //clamp to prevent light over bright if point/spot light too close to vertex
+
+
+    // N dot L
+    // half litOrShadowArea = NoL01;
+
+    // occlusion
+    // litOrShadowArea *= surfaceData.occlusion;
+
+    // light's shadow map
+    // litOrShadowArea *= lerp(1,light.shadowAttenuation,_ReceiveShadowMappingAmount);
+    half litOrShadowArea = FaceShadowMapAttenuation(surfaceData, light);
+
+    // 根据litOrShadowArea的值 采样lightingRamp贴图，获取对应颜色
+    half3 litOrShadowColor = SAMPLE_TEXTURE2D(_RampLightingMap, sampler_RampLightingMap, float2(litOrShadowArea, 0));
+
+    // half3 litOrShadowColor = lerp(_ShadowTint.rgb, 1, litOrShadowArea);
+
+    half3 lightAttenuationRGB = litOrShadowColor * distanceAttenuation;
+
+    // saturate() light.color to prevent over bright
+    // additional light reduce intensity since it is additive
+    return saturate(light.color) * lightAttenuationRGB * (isAdditionalLight ? 0.25 : 1);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// 通用光照函数
+//////////////////////////////////////////////////////////////////////////////////////
 
 // env diffuse
 half3 CalculateSkyboxIrradiance(half3 normalWS)
@@ -56,12 +96,12 @@ half3 CalculateSkyboxIrradiance(half3 normalWS)
 // _BrightShadowStepRange和 _ShadowTint 在有ramp后可以被完全替换
 // Most important part: lighting equation, edit it according to your needs, write whatever you want here, be creative!
 // This function will be used by all direct lights (directional/point/spot)
-half3 ShadeSingleLight(half3 normalWS, Light light, bool isAdditionalLight = false)
+half3 ShadeSingleLight(half3 normalWS, Light light, bool isAdditionalLight)
 {
     half3 N = normalWS;
     half3 L = light.direction;
 
-    half NoL = dot(N,L);
+    half NoL01 = dot(N,L) * 0.5 + 0.5;
 
     // light's distance & angle fade for point light & spot light (see GetAdditionalPerObjectLight(...) in Lighting.hlsl)
     // Lighting.hlsl -> https://github.com/Unity-Technologies/Graphics/blob/master/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl
@@ -72,7 +112,7 @@ half3 ShadeSingleLight(half3 normalWS, Light light, bool isAdditionalLight = fal
 
     // N dot L
     // simplest 1 line cel shade, you can always replace this line by your own method!
-    half litOrShadowArea = smoothstep(_BrightShadowStepRange.x, _BrightShadowStepRange.y, NoL);;
+    half litOrShadowArea = NoL01;
 
     // occlusion
     // litOrShadowArea *= surfaceData.occlusion;
@@ -84,7 +124,10 @@ half3 ShadeSingleLight(half3 normalWS, Light light, bool isAdditionalLight = fal
     // litOrShadowArea *= lerp(1,light.shadowAttenuation,_ReceiveShadowMappingAmount);
     litOrShadowArea *= light.shadowAttenuation;
 
-    half3 litOrShadowColor = lerp(_ShadowTint.rgb, 1, litOrShadowArea);
+    // 根据litOrShadowArea的值 采样lightingRamp贴图，获取对应颜色
+    half3 litOrShadowColor = SAMPLE_TEXTURE2D(_RampLightingMap, sampler_RampLightingMap, float2(litOrShadowArea, 0));
+
+    // half3 litOrShadowColor = lerp(_ShadowTint.rgb, 1, litOrShadowArea);
 
     half3 lightAttenuationRGB = litOrShadowColor * distanceAttenuation;
 
@@ -227,11 +270,68 @@ half3 calToonEyeLighting(ToonEyeSurfaceData surfaceData, float3 positionWS, floa
 
     #endif
 
+    // envDiffuse
+    half3 envDiffuse = CalculateSkyboxIrradiance(surfaceData.faceFrontDirection);
+    finalColor += envDiffuse * surfaceData.albedo;
+
     // EnvSpecular
     // 不想用matcap方式，可否使用probe的方式解决？
     // finalColor += MatCapHightlight(inputData, mainLight) * lerp(1, inputData.pupilMask, inputData.usePupilMask);
 
-    return finalColor;;
+    return finalColor;
+}
+
+half3 calToonFaceLighting(ToonFaceSurfaceData surfaceData, float3 positionWS, float2 normalizedScreenSpaceUV)
+{
+    float4 shadowCoord = TransformWorldToShadowCoord(positionWS);
+    Light mainLight = GetMainLight(shadowCoord);
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(positionWS);
+    
+    half3 finalColor = half3(0, 0, 0);
+
+    // mainLight
+    half3 mainLightResult = ShadeSingleLightFace(surfaceData, mainLight, false);
+    finalColor += mainLightResult * surfaceData.albedo;
+
+    // #if defined(_ADDITIONAL_LIGHTS)
+    // uint pixelLightCount = GetAdditionalLightsCount();
+
+    // #if USE_FORWARD_PLUS
+    // for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++)
+    // {
+    //     FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
+    //     //handle extra directional light
+    //     Light light = GetAdditionalLight(lightIndex, inputData.positionWS, inputData.shadowMask);
+    //     #ifdef _LIGHT_LAYERS
+    //     if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
+    //     #endif
+    //     {
+    //         finalColor += ToonAdditionalLighting(light, inputData, brdfData);
+    //     }
+    // }
+    // #endif
+
+    // LIGHT_LOOP_BEGIN(pixelLightCount)
+    //     //additional light
+    //     Light light = GetAdditionalLight(lightIndex, inputData.positionWS, inputData.shadowMask);
+    //     #ifdef _LIGHT_LAYERS
+    //     if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
+    //     #endif
+    //     {
+    //         finalColor += ToonAdditionalLighting(light, inputData, brdfData);
+    //     }
+    // LIGHT_LOOP_END
+    // #endif
+
+    // envDiffuse
+    half3 envDiffuse = CalculateSkyboxIrradiance(surfaceData.faceFrontDirection);
+    finalColor += envDiffuse * surfaceData.albedo;
+
+    // EnvSpecular
+    // 不想用matcap方式，可否使用probe的方式解决？
+    // finalColor += MatCapHightlight(inputData, mainLight) * lerp(1, inputData.pupilMask, inputData.usePupilMask);
+
+    return finalColor;
 }
 
 #endif

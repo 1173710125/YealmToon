@@ -45,7 +45,7 @@ Shader "YealmToon/CommonOpaque"
             // -------------------------------------
             // Render State Commands
             // Use same blending / depth states as Standard shader
-            ZWrite Off
+            ZWrite On
             Cull [_CullMode]
             ZTest LEqual
 

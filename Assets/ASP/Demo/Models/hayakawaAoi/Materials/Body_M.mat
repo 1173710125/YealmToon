@@ -401,7 +401,7 @@ Material:
     - _AlphaClipUVCtrl: {r: 1, g: 0, b: 0, a: 0}
     - _Ap_RimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _CharacterCenterWS: {r: 0.411, g: 0, b: -2.5, a: 0}
+    - _CharacterCenterWS: {r: 0, g: 0, b: -2.5, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _ColorShift: {r: 0, g: 0, b: 0, a: 1}
     - _DefaultUVChannel: {r: 1, g: 0, b: 0, a: 0}

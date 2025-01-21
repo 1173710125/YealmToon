@@ -15,10 +15,12 @@ CBUFFER_END
 
 TEXTURE2D(_BaseMap);        SAMPLER(sampler_BaseMap);
 TEXTURE2D(_NormalMap);        SAMPLER(sampler_NormalMap);
+TEXTURE2D(_RampLightingMap);        SAMPLER(sampler_RampLightingMap);
+TEXTURE2D(_RampSSSMap);        SAMPLER(sampler_RampSSSMap);
 
 half4 SampleAlbedoAlpha(float2 uv)
 {
-    return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv);
+    return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv);;
 }
 
 half3 SampleNormalTS(float2 uv)

@@ -17,11 +17,24 @@ struct ToonEyeSurfaceData
 {
     half3 albedo;
 
-    half3 matcapNormalWS;
-
     half3 faceFrontDirection;
 
     half highlightDarken;
 };
 
+struct ToonFaceSurfaceData
+{
+    half3 albedo;
+
+    half3 normalWS;
+
+    // sdfShadow
+    half faceShadowPow;
+    half faceShadowSmoothness;
+    half faceShadowValue1;
+    half faceShadowValue2;
+
+    half3 faceFrontDirection;
+    half3 faceRightDirection;
+};
 #endif
