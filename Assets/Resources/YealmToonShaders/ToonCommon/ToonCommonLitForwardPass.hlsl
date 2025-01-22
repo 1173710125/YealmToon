@@ -88,6 +88,12 @@ void LitPassFragmentCommon(
     float2 screenUV = GetNormalizedScreenSpaceUV(input.positionCS);
     // float depth = LinearEyeDepth(input.positionCS.z, _ZBufferParams);
 
+    // 本来不想写在这的，难顶有特殊情况
+#if defined(_ALPHA_CLIP)
+    half alpha = SampleAlbedoAlpha(input.uv).a;
+    clip(alpha - 0.5);
+#endif
+
     ToonCommonSurfaceData toonCommonSurfaceData = (ToonCommonSurfaceData)0;
     InitializeToonSurfaceData(input.uv, input.positionWS, input.tangentWS, input.bitangentWS, input.normalWS, toonCommonSurfaceData);
 

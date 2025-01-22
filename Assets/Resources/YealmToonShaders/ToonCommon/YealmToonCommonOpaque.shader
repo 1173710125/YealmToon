@@ -14,6 +14,8 @@ Shader "YealmToon/CommonOpaque"
         _NormalScale("normal scale", Float) = 1.0
         [NoScaleOffset]_NormalMap ("normal", 2D) = "bump" {}
 
+        [NoScaleOffset] _RampLightingMap("RampLightingMap", 2D) = "white" {}
+
         [Header(Rim Light)]
         [HDR]_RimLightColor("边缘光颜色", Color) = (1,1,1,1)
         _RimLightThreshold("边缘光界限", Range(-1, 1)) = 0.1
@@ -83,6 +85,7 @@ Shader "YealmToon/CommonOpaque"
             // GPU Instancing
             #pragma multi_compile_instancing
             
+            #pragma shader_feature_local _ _ALPHA_CLIP
             
             // input; m66-2 library; pass
             #include "ToonCommonLitInput.hlsl"

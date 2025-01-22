@@ -80,6 +80,20 @@ half3 ShadeSingleLightFace(ToonFaceSurfaceData surfaceData, Light light, bool is
 // 通用光照函数
 //////////////////////////////////////////////////////////////////////////////////////
 
+// 非PBR 通用高光
+// 眼睛高光不要用这个
+float3 LightingSpecularToon(float3 lightDir, float3 normal, float3 viewDir, float3 specular, float size, float smoothness)
+{
+    float3 halfVec = SafeNormalize(float3(lightDir) + float3(viewDir));
+    half NdotH = saturate(dot(normal, halfVec));
+    float spec = saturate(pow(NdotH, 4));
+    spec = smoothstep((1.0 - size) , (1.0 - size)  + smoothness, spec);
+    float3 specularReflection = lerp(0, specular, spec) * spec;
+    return specularReflection;
+}
+
+// 头发 kajiya-kay高光
+
 // env diffuse
 half3 CalculateSkyboxIrradiance(half3 normalWS)
 {
@@ -168,26 +182,22 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
     // 主平行光
     half3 mainLightResult = ShadeSingleLight(surfaceData.normalWS, mainLight, false) * surfaceData.albedo;
 
-    // half3 stepSpecular = step(_SpecularThreshold, NoH) * diffuse;
-
     // 额外光
-    // lightingData.additionalLightsResult = half3(0, 0, 0);
-    // #if defined(_ADDITIONAL_LIGHTS)
-    //     #if USE_FORWARD_PLUS
+    half3 additionalLightsResult = half3(0, 0, 0);
+    #if defined(_ADDITIONAL_LIGHTS)
+        #if USE_FORWARD_PLUS
 
-    //     uint lightIndex;
-    //     ClusterIterator _urp_internal_clusterIterator = ClusterInit(normalizedScreenSpaceUV, positionWS, 0);
-    //     [loop] while (ClusterNext(_urp_internal_clusterIterator, lightIndex)) { 
-    //         lightIndex += URP_FP_DIRECTIONAL_LIGHTS_COUNT; 
-    //         FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
+        uint lightIndex;
+        ClusterIterator _urp_internal_clusterIterator = ClusterInit(normalizedScreenSpaceUV, positionWS, 0);
+        [loop] while (ClusterNext(_urp_internal_clusterIterator, lightIndex)) { 
+            lightIndex += URP_FP_DIRECTIONAL_LIGHTS_COUNT; 
+            FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
 
-    //         Light addLight = GetAdditionalLight(lightIndex, positionWS);
-    //         half addLightNoL = max(dot(surfaceData.normalWS, addLight.direction), 0.0);
-    //         half3 addLightColor = addLight.color * (addLightNoL * addLight.distanceAttenuation);
-    //         lightingData.additionalLightsResult += addLightColor * CalDirectBRDF(brdfData, surfaceData.normalWS, addLight.direction, viewDirWS);
-    //     }
-    //     #endif
-    // #endif
+            Light addLight = GetAdditionalLight(lightIndex, positionWS);
+            additionalLightsResult += ShadeSingleLight(surfaceData.normalWS, addLight, true) * surfaceData.albedo;
+        }
+        #endif
+    #endif
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------环境光照------------------------------------------------------------------
@@ -204,7 +214,7 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
 //     // 全局光照 SSR and so on
 
     // return envLightResult;
-    return (mainLightResult + envLightResult);
+    return (mainLightResult + additionalLightsResult + envLightResult);
 }
 
 half3 calToonEyeLighting(ToonEyeSurfaceData surfaceData, float3 positionWS, float2 normalizedScreenSpaceUV, float2 HighlightUV)
@@ -219,35 +229,23 @@ half3 calToonEyeLighting(ToonEyeSurfaceData surfaceData, float3 positionWS, floa
     half3 mainLightResult = ShadeSingleLight(surfaceData.faceFrontDirection, mainLight, false);
     finalColor += mainLightResult * surfaceData.albedo;
 
-    // #if defined(_ADDITIONAL_LIGHTS)
-    // uint pixelLightCount = GetAdditionalLightsCount();
+    // 额外光
+    half3 additionalLightsResult = half3(0, 0, 0);
+    #if defined(_ADDITIONAL_LIGHTS)
+        #if USE_FORWARD_PLUS
 
-    // #if USE_FORWARD_PLUS
-    // for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++)
-    // {
-    //     FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
-    //     //handle extra directional light
-    //     Light light = GetAdditionalLight(lightIndex, inputData.positionWS, inputData.shadowMask);
-    //     #ifdef _LIGHT_LAYERS
-    //     if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
-    //     #endif
-    //     {
-    //         finalColor += ToonAdditionalLighting(light, inputData, brdfData);
-    //     }
-    // }
-    // #endif
+        uint lightIndex;
+        ClusterIterator _urp_internal_clusterIterator = ClusterInit(normalizedScreenSpaceUV, positionWS, 0);
+        [loop] while (ClusterNext(_urp_internal_clusterIterator, lightIndex)) { 
+            lightIndex += URP_FP_DIRECTIONAL_LIGHTS_COUNT; 
+            FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
 
-    // LIGHT_LOOP_BEGIN(pixelLightCount)
-    //     //additional light
-    //     Light light = GetAdditionalLight(lightIndex, inputData.positionWS, inputData.shadowMask);
-    //     #ifdef _LIGHT_LAYERS
-    //     if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
-    //     #endif
-    //     {
-    //         finalColor += ToonAdditionalLighting(light, inputData, brdfData);
-    //     }
-    // LIGHT_LOOP_END
-    // #endif
+            Light addLight = GetAdditionalLight(lightIndex, positionWS);
+            additionalLightsResult += ShadeSingleLight(surfaceData.faceFrontDirection, addLight, true) * surfaceData.albedo;
+        }
+        #endif
+    #endif
+    finalColor += additionalLightsResult;
 
     half3 viewParallax = abs(normalize(TransformWorldToViewDir(viewDirWS)));
     // 高光
@@ -293,35 +291,23 @@ half3 calToonFaceLighting(ToonFaceSurfaceData surfaceData, float3 positionWS, fl
     half3 mainLightResult = ShadeSingleLightFace(surfaceData, mainLight, false);
     finalColor += mainLightResult * surfaceData.albedo;
 
-    // #if defined(_ADDITIONAL_LIGHTS)
-    // uint pixelLightCount = GetAdditionalLightsCount();
+    // 额外光
+    half3 additionalLightsResult = half3(0, 0, 0);
+    #if defined(_ADDITIONAL_LIGHTS)
+        #if USE_FORWARD_PLUS
 
-    // #if USE_FORWARD_PLUS
-    // for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++)
-    // {
-    //     FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
-    //     //handle extra directional light
-    //     Light light = GetAdditionalLight(lightIndex, inputData.positionWS, inputData.shadowMask);
-    //     #ifdef _LIGHT_LAYERS
-    //     if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
-    //     #endif
-    //     {
-    //         finalColor += ToonAdditionalLighting(light, inputData, brdfData);
-    //     }
-    // }
-    // #endif
+        uint lightIndex;
+        ClusterIterator _urp_internal_clusterIterator = ClusterInit(normalizedScreenSpaceUV, positionWS, 0);
+        [loop] while (ClusterNext(_urp_internal_clusterIterator, lightIndex)) { 
+            lightIndex += URP_FP_DIRECTIONAL_LIGHTS_COUNT; 
+            FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
 
-    // LIGHT_LOOP_BEGIN(pixelLightCount)
-    //     //additional light
-    //     Light light = GetAdditionalLight(lightIndex, inputData.positionWS, inputData.shadowMask);
-    //     #ifdef _LIGHT_LAYERS
-    //     if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
-    //     #endif
-    //     {
-    //         finalColor += ToonAdditionalLighting(light, inputData, brdfData);
-    //     }
-    // LIGHT_LOOP_END
-    // #endif
+            Light addLight = GetAdditionalLight(lightIndex, positionWS);
+            additionalLightsResult += ShadeSingleLight(surfaceData.normalWS, addLight, true) * surfaceData.albedo;
+        }
+        #endif
+    #endif
+    finalColor += additionalLightsResult;
 
     // envDiffuse
     half3 envDiffuse = CalculateSkyboxIrradiance(surfaceData.faceFrontDirection);
