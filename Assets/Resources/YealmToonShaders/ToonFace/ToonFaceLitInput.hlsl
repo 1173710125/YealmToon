@@ -14,6 +14,7 @@ CBUFFER_START(UnityPerMaterial)
     // face
     half _FaceShadowPow;
     half _FaceShadowSmoothness;
+    half4 _CheekColor;
 
     half3 _FaceFrontDirection;
     half3 _FaceRightDirection;
@@ -36,6 +37,10 @@ inline void InitializeToonSurfaceData(float2 uv, float3 positionWS, half3 tangen
     // albedo
     half4 albedoAlpha = SampleAlbedoAlpha(uv);
     outSurfaceData.albedo = albedoAlpha.rgb * _BaseColor.rgb;
+
+    half3 cheekColor = _CheekColor.rgb;
+    half cheekAlpha = _CheekColor.a * albedoAlpha.a;
+    outSurfaceData.albedo = lerp(outSurfaceData.albedo, cheekColor, cheekAlpha);
 
     normalWS = normalize(normalWS);
     half3 faceUpDirection = cross(_FaceFrontDirection, _FaceRightDirection);

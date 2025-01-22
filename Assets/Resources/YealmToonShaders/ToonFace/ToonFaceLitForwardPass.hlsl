@@ -82,6 +82,10 @@ void LitPassFragmentFace(
     // BRDF光照结果
     half3 toonLighting = calToonFaceLighting(toonFaceSurfaceData, input.positionWS, screenUV);
 
+    // 描边颜色
+    #ifdef ToonShaderIsOutline
+        toonLighting *= _OutlineColor; // 考虑是否 *toonLighting
+    #endif
 
     // 雾效
     

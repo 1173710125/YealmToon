@@ -18,6 +18,7 @@ Shader "YealmToon/Face"
         [NoScaleOffset] _FaceSDFMap("FaceSDFMap", 2D) = "white" {}
         _FaceShadowPow("脸部sdf偏移", Range(0, 10)) = 1
         _FaceShadowSmoothness("sdf阴影柔和度", Range(0, 1)) = 0.3
+        _CheekColor("脸颊颜色", Color) = (1, 0.752, 0.796, 1)
 
         [Header(Outline)]
         _OutlineWidth("描边宽度", Range(0, 10)) = 1

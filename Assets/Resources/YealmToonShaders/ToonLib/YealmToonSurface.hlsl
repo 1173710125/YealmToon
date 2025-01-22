@@ -9,8 +9,6 @@ struct ToonCommonSurfaceData
 
     half metallic;
     half roughness;
-
-    half3 faceFrontDirection;
 };
 
 struct ToonEyeSurfaceData

@@ -191,7 +191,7 @@ Material:
     - _Group7: 0
     - _GroupMatCap: 0
     - _HairLightCameraRollInfluence: 0.074
-    - _HairLightFresnelMaskPower: 3.31
+    - _HairLightFresnelMaskPower: 4
     - _HairLightStrength: 1
     - _HairUVSideCut: 0
     - _IsUsingMatcapReflectMap: 0

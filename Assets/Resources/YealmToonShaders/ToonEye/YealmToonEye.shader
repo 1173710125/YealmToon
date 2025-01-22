@@ -9,7 +9,7 @@ Shader "YealmToon/Eye"
         [Header(Base Color)]
         [NoScaleOffset] _BaseMap("BaseMap", 2D) = "white" {}
         _BaseColor("baseColor", Color) = (1,1,1,1)
-        _ShadowTint("shadowTint", Color) = (0.5,0.5,0.5,1)
+        [NoScaleOffset] _RampLightingMap("RampLightingMap", 2D) = "white" {}
 
 
         [Header(Highlights)]

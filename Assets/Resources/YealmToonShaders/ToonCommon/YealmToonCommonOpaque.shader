@@ -11,8 +11,6 @@ Shader "YealmToon/CommonOpaque"
         [NoScaleOffset] _BaseMap("BaseMap", 2D) = "white" {}
         _BaseColor("baseColor", Color) = (1,1,1,1)
 
-        _ShadowTint("shadowTint", Color) = (0.5,0.5,0.5,1)
-
         _NormalScale("normal scale", Float) = 1.0
         [NoScaleOffset]_NormalMap ("normal", 2D) = "bump" {}
 

@@ -166,7 +166,7 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
 // ------------------------------------------------------------直接光照------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------------------
     // 主平行光
-    half3 mainLightResult = ShadeSingleLight(surfaceData.normalWS, mainLight, false);
+    half3 mainLightResult = ShadeSingleLight(surfaceData.normalWS, mainLight, false) * surfaceData.albedo;
 
     // half3 stepSpecular = step(_SpecularThreshold, NoH) * diffuse;
 
@@ -193,7 +193,7 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
 // ------------------------------------------------------------环境光照------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------------------
     // 天空环境光diffuse
-    half3 envLightResult = ShadeEnvLight(surfaceData);
+    half3 envLightResult = ShadeEnvLight(surfaceData) * surfaceData.albedo;
 
     // 环境光spe by probe
 
@@ -204,7 +204,7 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
 //     // 全局光照 SSR and so on
 
     // return envLightResult;
-    return max(mainLightResult, envLightResult) * surfaceData.albedo;
+    return (mainLightResult + envLightResult);
 }
 
 half3 calToonEyeLighting(ToonEyeSurfaceData surfaceData, float3 positionWS, float2 normalizedScreenSpaceUV, float2 HighlightUV)
