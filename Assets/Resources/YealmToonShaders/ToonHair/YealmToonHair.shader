@@ -15,6 +15,12 @@ Shader "YealmToon/Hair"
         _NormalScale("normal scale", Float) = 1.0
         [NoScaleOffset]_NormalMap ("normal", 2D) = "bump" {}
 
+        [Header(highLight)]
+        [NoScaleOffset] _SpecularMap("SpecularMap", 2D) = "white" {}
+        [HDR]_SpecularColor("specularColor", Color) = (1,1,1,1)
+        _SpecularSize("specular区域范围", Range(0, 1)) = 0
+        _SpecularSmooth("specular柔和度", Range(0, 1)) = 0
+
         [Header(Rim Light)]
         [HDR]_RimLightColor("边缘光颜色", Color) = (1,1,1,1)
         _RimLightThreshold("边缘光界限", Range(-1, 1)) = 0.1

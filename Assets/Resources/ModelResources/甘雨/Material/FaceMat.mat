@@ -116,7 +116,7 @@ Material:
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
     - _FaceShadowPow: 1
-    - _FaceShadowSmoothness: 0.043
+    - _FaceShadowSmoothness: 0.1
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0

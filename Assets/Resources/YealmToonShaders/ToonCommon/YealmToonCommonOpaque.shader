@@ -7,12 +7,18 @@ Shader "YealmToon/CommonOpaque"
         [Enum(UnityEngine.Rendering.CullMode)] _CullMode ("剔除模式", Float) = 0
         [Toggle(_ALPHA_CLIP)] _AlphaTest ("透明度测试", float) = 0
 
-        [Header(Base Color)]
+        [Header(general setting)]
         [NoScaleOffset] _BaseMap("BaseMap", 2D) = "white" {}
         _BaseColor("baseColor", Color) = (1,1,1,1)
 
         _NormalScale("normal scale", Float) = 1.0
         [NoScaleOffset]_NormalMap ("normal", 2D) = "bump" {}
+
+        [Header(highLight)]
+        [NoScaleOffset] _SpecularMap("SpecularMap", 2D) = "white" {}
+        [HDR]_SpecularColor("specularColor", Color) = (1,1,1,1)
+        _SpecularSize("specular区域范围", Range(0, 1)) = 0
+        _SpecularSmooth("specular柔和度", Range(0, 1)) = 0
 
         [NoScaleOffset] _RampLightingMap("RampLightingMap", 2D) = "white" {}
 

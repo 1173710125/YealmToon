@@ -30,8 +30,6 @@ half4 SampleAlbedoAlpha(float2 uv)
     return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv);
 }
 
-
-
 inline void InitializeToonSurfaceData(float2 uv, float3 positionWS, half3 tangentWS, half3 bitangentWS, half3 normalWS, inout ToonFaceSurfaceData outSurfaceData)
 {
     // albedo
@@ -47,6 +45,7 @@ inline void InitializeToonSurfaceData(float2 uv, float3 positionWS, half3 tangen
     half3 projectOnUpVector = dot(normalWS, faceUpDirection) * faceUpDirection;
     half3 projectOnPlane = normalize(normalWS - projectOnUpVector);
     outSurfaceData.normalWS = projectOnPlane;
+
 
     // faceSDFMap
     outSurfaceData.faceShadowValue1 = SAMPLE_TEXTURE2D_LOD(_FaceSDFMap, sampler_FaceSDFMap, float2(uv.x, uv.y), 0).r;

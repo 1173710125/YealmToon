@@ -82,7 +82,7 @@ half3 ShadeSingleLightFace(ToonFaceSurfaceData surfaceData, Light light, bool is
 
 // 非PBR 通用高光
 // 眼睛高光不要用这个
-float3 LightingSpecularToon(float3 lightDir, float3 normal, float3 viewDir, float3 specular, float size, float smoothness)
+float3 LightingSpecularToon(float3 lightDir, float3 normal, float3 viewDir, half3 specular, half size, half smoothness)
 {
     float3 halfVec = SafeNormalize(float3(lightDir) + float3(viewDir));
     half NdotH = saturate(dot(normal, halfVec));
@@ -180,7 +180,8 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
 // ------------------------------------------------------------直接光照------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------------------
     // 主平行光
-    half3 mainLightResult = ShadeSingleLight(surfaceData.normalWS, mainLight, false) * surfaceData.albedo;
+    half3 mainLightAtten = ShadeSingleLight(surfaceData.normalWS, mainLight, false);
+    half3 mainLightResult = mainLightAtten * (surfaceData.albedo + LightingSpecularToon(mainLight.direction, surfaceData.normalWS, viewDirWS, surfaceData.specularColor, surfaceData.specularSize, surfaceData.specularSmooth));
 
     // 额外光
     half3 additionalLightsResult = half3(0, 0, 0);
@@ -194,7 +195,8 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
             FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
 
             Light addLight = GetAdditionalLight(lightIndex, positionWS);
-            additionalLightsResult += ShadeSingleLight(surfaceData.normalWS, addLight, true) * surfaceData.albedo;
+            half3 addLightAtten = ShadeSingleLight(surfaceData.normalWS, addLight, true);
+            additionalLightsResult += addLightAtten * (surfaceData.albedo + LightingSpecularToon(addLight.direction, surfaceData.normalWS, viewDirWS, surfaceData.specularColor, surfaceData.specularSize, surfaceData.specularSmooth));
         }
         #endif
     #endif
