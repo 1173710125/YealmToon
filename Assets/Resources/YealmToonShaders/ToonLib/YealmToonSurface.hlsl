@@ -4,8 +4,6 @@
 struct ToonCommonSurfaceData
 {
     half3 albedo;
-    half3 normalWS;
-    half3 normalTS;
 
 // pbr
     half metallic;
@@ -29,8 +27,6 @@ struct ToonEyeSurfaceData
 struct ToonFaceSurfaceData
 {
     half3 albedo;
-
-    half3 normalWS;
 
     // not pbr
     half3 specularColor;

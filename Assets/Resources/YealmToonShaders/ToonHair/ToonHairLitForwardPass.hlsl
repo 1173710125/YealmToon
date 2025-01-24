@@ -85,15 +85,15 @@ void LitPassFragmentCommon(
     , out half4 outColor : SV_Target0
 )
 {
-    float2 screenUV = GetNormalizedScreenSpaceUV(input.positionCS);
-    // float depth = LinearEyeDepth(input.positionCS.z, _ZBufferParams);
+    ToonInputData toonInputData = (ToonInputData)0;
+    InitializeToonInputData(input.uv, input.positionWS, input.positionCS, input.tangentWS, input.bitangentWS, input.normalWS, toonInputData);
 
     ToonCommonSurfaceData toonCommonSurfaceData = (ToonCommonSurfaceData)0;
-    InitializeToonSurfaceData(input.uv, input.positionWS, input.tangentWS, input.bitangentWS, input.normalWS, toonCommonSurfaceData);
+    InitializeToonSurfaceData(toonInputData, toonCommonSurfaceData);
 
 
     // BRDF光照结果
-    half3 toonLighting = calToonCommonLighting(toonCommonSurfaceData, input.positionWS, screenUV);
+    half3 toonLighting = calToonCommonLighting(toonInputData, toonCommonSurfaceData);
 
     // 描边颜色
     #ifdef ToonShaderIsOutline

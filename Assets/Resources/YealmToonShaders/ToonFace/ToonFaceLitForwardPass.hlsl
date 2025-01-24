@@ -73,14 +73,15 @@ void LitPassFragmentFace(
     , out half4 outColor : SV_Target0
 )
 {
-    float2 screenUV = GetNormalizedScreenSpaceUV(input.positionCS);
+    ToonInputData toonInputData = (ToonInputData)0;
+    InitializeToonInputData(input.uv, input.positionWS, input.positionCS, input.tangentWS, input.bitangentWS, input.normalWS, toonInputData);
 
     ToonFaceSurfaceData toonFaceSurfaceData = (ToonFaceSurfaceData)0;
-    InitializeToonSurfaceData(input.uv, input.positionWS, input.tangentWS, input.bitangentWS, input.normalWS, toonFaceSurfaceData);
+    InitializeToonSurfaceData(toonInputData, toonFaceSurfaceData);
 
 
     // BRDF光照结果
-    half3 toonLighting = calToonFaceLighting(toonFaceSurfaceData, input.positionWS, screenUV);
+    half3 toonLighting = calToonFaceLighting(toonInputData, toonFaceSurfaceData);
 
     // 描边颜色
     #ifdef ToonShaderIsOutline

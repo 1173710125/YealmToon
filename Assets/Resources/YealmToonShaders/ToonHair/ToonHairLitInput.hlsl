@@ -3,6 +3,7 @@
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "../ToonLib/YealmToonSurface.hlsl"
+#include "../ToonLib/YealmToonInput.hlsl"
 
 CBUFFER_START(UnityPerMaterial)
     half4 _BaseColor;
@@ -37,26 +38,32 @@ half3 SampleSpecular(float2 uv)
     return SAMPLE_TEXTURE2D(_SpecularMap, sampler_SpecularMap, uv).rgb;
 }
 
+inline void InitializeToonInputData(float2 uv, float3 positionWS, float4 positionCS, half3 tangentWS, half3 bitangentWS, half3 normalWS, inout ToonInputData outInputData)
+{
+    outInputData.screenUV = GetNormalizedScreenSpaceUV(positionCS);
 
-inline void InitializeToonSurfaceData(float2 uv, float3 positionWS, half3 tangentWS, half3 bitangentWS, half3 normalWS, inout ToonCommonSurfaceData outSurfaceData)
+    outInputData.meshUV = uv;
+    outInputData.positionWS = positionWS;
+    outInputData.positionVS = TransformWorldToView(positionWS);
+    
+    outInputData.normalTS = SampleNormalTS(uv);
+    half3x3 tangentToWorld = half3x3(tangentWS.xyz, bitangentWS.xyz, normalWS.xyz);
+    outInputData.normalWS = TransformTangentToWorld(outInputData.normalTS, tangentToWorld);
+    outInputData.normalWS = NormalizeNormalPerPixel(outInputData.normalWS);
+    outInputData.normalVS = TransformWorldToViewDir(outInputData.normalWS);
+
+}
+
+inline void InitializeToonSurfaceData(ToonInputData inputData, inout ToonCommonSurfaceData outSurfaceData)
 {
     // albedo
-    half4 albedoAlpha = SampleAlbedoAlpha(uv);
+    half4 albedoAlpha = SampleAlbedoAlpha(inputData.meshUV);
     outSurfaceData.albedo = albedoAlpha.rgb * _BaseColor.rgb;
 
-    // normal
-    outSurfaceData.normalTS = SampleNormalTS(uv);
-    half3x3 tangentToWorld = half3x3(tangentWS.xyz, bitangentWS.xyz, normalWS.xyz);
-
     // high light
-    outSurfaceData.specularColor = SampleSpecular(uv) * _SpecularColor.rgb;
+    outSurfaceData.specularColor = SampleSpecular(inputData.meshUV) * _SpecularColor.rgb;
     outSurfaceData.specularSize = _SpecularSize;
     outSurfaceData.specularSmooth = _SpecularSmooth;
-
-    outSurfaceData.normalWS = TransformTangentToWorld(outSurfaceData.normalTS, tangentToWorld);
-    outSurfaceData.normalWS = NormalizeNormalPerPixel(outSurfaceData.normalWS);
-
-
 }
 
 #endif

@@ -2,7 +2,9 @@
 #define TOON_LIGHTING_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 #include "YealmToonSurface.hlsl"
+#include "YealmToonInput.hlsl"
 
 half _SpecularThreshold;
 half2 _BrightShadowStepRange;
@@ -41,9 +43,9 @@ half FaceShadowMapAttenuation(ToonFaceSurfaceData surfaceData, Light light)
     return 1.0 - lightAttenuation;
 }
 
-half3 ShadeSingleLightFace(ToonFaceSurfaceData surfaceData, Light light, bool isAdditionalLight)
+half3 ShadeSingleLightFace(ToonInputData inputData, ToonFaceSurfaceData surfaceData, Light light, bool isAdditionalLight)
 {
-    half3 N = surfaceData.normalWS;
+    half3 N = inputData.normalWS;
     half3 L = light.direction;
 
     half NoL01 = dot(N,L) * 0.5 + 0.5;
@@ -79,6 +81,27 @@ half3 ShadeSingleLightFace(ToonFaceSurfaceData surfaceData, Light light, bool is
 //////////////////////////////////////////////////////////////////////////////////////
 // 通用光照函数
 //////////////////////////////////////////////////////////////////////////////////////
+
+// depth rimlight
+// real3 DepthRimLighting(ToonInputData inputData, Light mainLight, float3 baseColor)
+// {
+//     float3 offsetPosVS = float3(inputData.positionVS.xy + inputData.normalVS.xy * inputData.depthRimLightStrength * 0.1,
+//                                 inputData.positionVS.z);
+//     float4 offsetPosCS = TransformWViewToHClip(offsetPosVS);
+//     float4 offsetPosVP = TransformHClipToViewPortPos(offsetPosCS);
+//     float offsetDepth = SampleSceneDepth(offsetPosVP.xy);
+//     float linearEyeOffsetDepth = LinearEyeDepth(offsetDepth, _ZBufferParams);
+//     float depth = SampleSceneDepth(inputData.normalizedScreenSpaceUV);
+//     float linearEyeDepth = LinearEyeDepth(depth, _ZBufferParams);
+//     float depthDiff = linearEyeOffsetDepth - linearEyeDepth;
+//     float rimMask = smoothstep(0, 0.9, depthDiff);
+//     real3 depthRimLighting = rimMask * inputData.depthRimLightColor.rgb * inputData.depthRimLightColor.a;;
+//     depthRimLighting *= lerp(mainLight.distanceAttenuation * mainLight.shadowAttenuation, 1,
+//                              inputData.rimLightOverShadow);
+//     return lerp(baseColor, depthRimLighting, rimMask);
+// }
+
+// local shadow by depth
 
 // 非PBR 通用高光
 // 眼睛高光不要用这个
@@ -168,20 +191,20 @@ half3 ShadeEnvLight(ToonCommonSurfaceData surfaceData, bool isFace = false)
 //////////////////////////////////////////////////////////////////////////////////////
 // todo：pbr-BRDF光照计算
 //////////////////////////////////////////////////////////////////////////////////////
-half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS, float2 normalizedScreenSpaceUV)
+half3 calToonCommonLighting(ToonInputData inputData, ToonCommonSurfaceData surfaceData)
 {
-    float4 shadowCoord = TransformWorldToShadowCoord(positionWS);
+    float4 shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
     Light mainLight = GetMainLight(shadowCoord);
-    mainLight.shadowAttenuation = lerp(mainLight.shadowAttenuation, 1, GetShadowFade(positionWS)); // shadow fade
+    mainLight.shadowAttenuation = lerp(mainLight.shadowAttenuation, 1, GetShadowFade(inputData.positionWS)); // shadow fade
 
-    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(positionWS);
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(inputData.positionWS);
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------直接光照------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------------------
     // 主平行光
-    half3 mainLightAtten = ShadeSingleLight(surfaceData.normalWS, mainLight, false);
-    half3 mainLightResult = mainLightAtten * (surfaceData.albedo + LightingSpecularToon(mainLight.direction, surfaceData.normalWS, viewDirWS, surfaceData.specularColor, surfaceData.specularSize, surfaceData.specularSmooth));
+    half3 mainLightAtten = ShadeSingleLight(inputData.normalWS, mainLight, false);
+    half3 mainLightResult = mainLightAtten * (surfaceData.albedo + LightingSpecularToon(mainLight.direction, inputData.normalWS, viewDirWS, surfaceData.specularColor, surfaceData.specularSize, surfaceData.specularSmooth));
 
     // 额外光
     half3 additionalLightsResult = half3(0, 0, 0);
@@ -189,14 +212,14 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
         #if USE_FORWARD_PLUS
 
         uint lightIndex;
-        ClusterIterator _urp_internal_clusterIterator = ClusterInit(normalizedScreenSpaceUV, positionWS, 0);
+        ClusterIterator _urp_internal_clusterIterator = ClusterInit(inputData.screenUV, inputData.positionWS, 0);
         [loop] while (ClusterNext(_urp_internal_clusterIterator, lightIndex)) { 
             lightIndex += URP_FP_DIRECTIONAL_LIGHTS_COUNT; 
             FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
 
-            Light addLight = GetAdditionalLight(lightIndex, positionWS);
-            half3 addLightAtten = ShadeSingleLight(surfaceData.normalWS, addLight, true);
-            additionalLightsResult += addLightAtten * (surfaceData.albedo + LightingSpecularToon(addLight.direction, surfaceData.normalWS, viewDirWS, surfaceData.specularColor, surfaceData.specularSize, surfaceData.specularSmooth));
+            Light addLight = GetAdditionalLight(lightIndex, inputData.positionWS);
+            half3 addLightAtten = ShadeSingleLight(inputData.normalWS, addLight, true);
+            additionalLightsResult += addLightAtten * (surfaceData.albedo + LightingSpecularToon(addLight.direction, inputData.normalWS, viewDirWS, surfaceData.specularColor, surfaceData.specularSize, surfaceData.specularSmooth));
         }
         #endif
     #endif
@@ -219,11 +242,11 @@ half3 calToonCommonLighting(ToonCommonSurfaceData surfaceData, float3 positionWS
     return (mainLightResult + additionalLightsResult + envLightResult);
 }
 
-half3 calToonEyeLighting(ToonEyeSurfaceData surfaceData, float3 positionWS, float2 normalizedScreenSpaceUV, float2 HighlightUV)
+half3 calToonEyeLighting(ToonInputData inputData, ToonEyeSurfaceData surfaceData)
 {
-    float4 shadowCoord = TransformWorldToShadowCoord(positionWS);
+    float4 shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
     Light mainLight = GetMainLight(shadowCoord);
-    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(positionWS);
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(inputData.positionWS);
     
     half3 finalColor = half3(0, 0, 0);
 
@@ -237,12 +260,12 @@ half3 calToonEyeLighting(ToonEyeSurfaceData surfaceData, float3 positionWS, floa
         #if USE_FORWARD_PLUS
 
         uint lightIndex;
-        ClusterIterator _urp_internal_clusterIterator = ClusterInit(normalizedScreenSpaceUV, positionWS, 0);
+        ClusterIterator _urp_internal_clusterIterator = ClusterInit(inputData.screenUV, inputData.positionWS, 0);
         [loop] while (ClusterNext(_urp_internal_clusterIterator, lightIndex)) { 
             lightIndex += URP_FP_DIRECTIONAL_LIGHTS_COUNT; 
             FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
 
-            Light addLight = GetAdditionalLight(lightIndex, positionWS);
+            Light addLight = GetAdditionalLight(lightIndex, inputData.positionWS);
             additionalLightsResult += ShadeSingleLight(surfaceData.faceFrontDirection, addLight, true) * surfaceData.albedo;
         }
         #endif
@@ -281,16 +304,16 @@ half3 calToonEyeLighting(ToonEyeSurfaceData surfaceData, float3 positionWS, floa
     return finalColor;
 }
 
-half3 calToonFaceLighting(ToonFaceSurfaceData surfaceData, float3 positionWS, float2 normalizedScreenSpaceUV)
+half3 calToonFaceLighting(ToonInputData inputData, ToonFaceSurfaceData surfaceData)
 {
-    float4 shadowCoord = TransformWorldToShadowCoord(positionWS);
+    float4 shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
     Light mainLight = GetMainLight(shadowCoord);
-    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(positionWS);
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(inputData.positionWS);
     
     half3 finalColor = half3(0, 0, 0);
 
     // mainLight
-    half3 mainLightResult = ShadeSingleLightFace(surfaceData, mainLight, false);
+    half3 mainLightResult = ShadeSingleLightFace(inputData, surfaceData, mainLight, false);
     finalColor += mainLightResult * surfaceData.albedo;
 
     // 额外光
@@ -299,13 +322,13 @@ half3 calToonFaceLighting(ToonFaceSurfaceData surfaceData, float3 positionWS, fl
         #if USE_FORWARD_PLUS
 
         uint lightIndex;
-        ClusterIterator _urp_internal_clusterIterator = ClusterInit(normalizedScreenSpaceUV, positionWS, 0);
+        ClusterIterator _urp_internal_clusterIterator = ClusterInit(inputData.screenUV, inputData.positionWS, 0);
         [loop] while (ClusterNext(_urp_internal_clusterIterator, lightIndex)) { 
             lightIndex += URP_FP_DIRECTIONAL_LIGHTS_COUNT; 
             FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
 
-            Light addLight = GetAdditionalLight(lightIndex, positionWS);
-            additionalLightsResult += ShadeSingleLight(surfaceData.normalWS, addLight, true) * surfaceData.albedo;
+            Light addLight = GetAdditionalLight(lightIndex, inputData.positionWS);
+            additionalLightsResult += ShadeSingleLight(inputData.normalWS, addLight, true) * surfaceData.albedo;
         }
         #endif
     #endif

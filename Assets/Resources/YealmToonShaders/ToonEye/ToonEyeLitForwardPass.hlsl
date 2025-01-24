@@ -53,14 +53,15 @@ void LitPassFragmentEye(
     , out half4 outColor : SV_Target0
 )
 {
-    float2 screenUV = GetNormalizedScreenSpaceUV(input.positionCS);
+    ToonInputData toonInputData = (ToonInputData)0;
+    InitializeToonInputData(input.uv, input.positionWS, input.positionCS, input.tangentWS, input.bitangentWS, input.normalWS, toonInputData);
 
     ToonEyeSurfaceData toonEyeSurfaceData = (ToonEyeSurfaceData)0;
-    InitializeToonSurfaceData(input.uv, input.positionWS, input.tangentWS, input.bitangentWS, input.normalWS, toonEyeSurfaceData);
+    InitializeToonSurfaceData(toonInputData, toonEyeSurfaceData);
 
 
     // BRDF光照结果
-    half3 toonLighting = calToonEyeLighting(toonEyeSurfaceData, input.positionWS, screenUV, input.uv);
+    half3 toonLighting = calToonEyeLighting(toonInputData, toonEyeSurfaceData);
 
 
     // 雾效
