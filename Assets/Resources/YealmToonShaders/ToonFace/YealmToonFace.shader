@@ -20,6 +20,12 @@ Shader "YealmToon/Face"
         _FaceShadowSmoothness("sdf阴影柔和度", Range(0, 1)) = 0.3
         _CheekColor("脸颊颜色", Color) = (1, 0.752, 0.796, 1)
 
+        [Header(Rim Light)]
+        [HDR]_RimLightColor("边缘光颜色", Color) = (1,1,1,1)
+        _RimLightStrength("边缘光强度", Range(0, 1)) = 0
+        _RimLightAlign("边缘光偏移", Range(-1, 1)) = 0
+        _RimLightSmoothness("边缘光柔和度", Range(0, 1)) = 0
+
         [Header(Outline)]
         _OutlineWidth("描边宽度", Range(0, 10)) = 1
         _OutlineColor("描边颜色", Color) = (1,0,0,1)

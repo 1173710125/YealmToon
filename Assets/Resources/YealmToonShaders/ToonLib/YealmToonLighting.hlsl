@@ -5,6 +5,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 #include "YealmToonSurface.hlsl"
 #include "YealmToonInput.hlsl"
+#include "YealmToonCommon.hlsl"
 
 half _SpecularThreshold;
 half2 _BrightShadowStepRange;
@@ -83,23 +84,36 @@ half3 ShadeSingleLightFace(ToonInputData inputData, ToonFaceSurfaceData surfaceD
 //////////////////////////////////////////////////////////////////////////////////////
 
 // depth rimlight
-// real3 DepthRimLighting(ToonInputData inputData, Light mainLight, float3 baseColor)
-// {
-//     float3 offsetPosVS = float3(inputData.positionVS.xy + inputData.normalVS.xy * inputData.depthRimLightStrength * 0.1,
-//                                 inputData.positionVS.z);
-//     float4 offsetPosCS = TransformWViewToHClip(offsetPosVS);
-//     float4 offsetPosVP = TransformHClipToViewPortPos(offsetPosCS);
-//     float offsetDepth = SampleSceneDepth(offsetPosVP.xy);
-//     float linearEyeOffsetDepth = LinearEyeDepth(offsetDepth, _ZBufferParams);
-//     float depth = SampleSceneDepth(inputData.normalizedScreenSpaceUV);
-//     float linearEyeDepth = LinearEyeDepth(depth, _ZBufferParams);
-//     float depthDiff = linearEyeOffsetDepth - linearEyeDepth;
-//     float rimMask = smoothstep(0, 0.9, depthDiff);
-//     real3 depthRimLighting = rimMask * inputData.depthRimLightColor.rgb * inputData.depthRimLightColor.a;;
-//     depthRimLighting *= lerp(mainLight.distanceAttenuation * mainLight.shadowAttenuation, 1,
-//                              inputData.rimLightOverShadow);
-//     return lerp(baseColor, depthRimLighting, rimMask);
-// }
+float3 ShadeDepthRimLight(ToonInputData inputData, Light mainLight, float3 baseColor)
+{
+    float3 offsetPosVS = float3(inputData.positionVS.xy + inputData.normalVS.xy * inputData.rimLightStrength * 0.1,
+                                inputData.positionVS.z);
+    float4 offsetPosCS = TransformWViewToHClip(offsetPosVS);
+    float4 offsetPosVP = TransformHClipToViewPortPos(offsetPosCS);
+    float offsetDepth = SampleSceneDepth(offsetPosVP.xy);
+    float linearEyeOffsetDepth = LinearEyeDepth(offsetDepth, _ZBufferParams);
+    float depth = SampleSceneDepth(inputData.screenUV);
+    float linearEyeDepth = LinearEyeDepth(depth, _ZBufferParams);
+    float depthDiff = linearEyeOffsetDepth - linearEyeDepth;
+    float rimMask = smoothstep(0, 0.9, depthDiff);
+    float3 depthRimLighting = rimMask * inputData.rimLightColor.rgb;
+    depthRimLighting *= mainLight.shadowAttenuation;
+
+    return lerp(baseColor, depthRimLighting, rimMask);
+}
+
+real3 ShadeFresnelRimLight(ToonInputData inputData, Light mainLight, half3 viewDirWS)
+{
+    half NdotL = saturate(dot(mainLight.direction, inputData.normalWS));
+    real rimPower = 1.0 - inputData.rimLightStrength;
+    real NdotV = dot(viewDirWS, inputData.normalWS);
+    real rim = saturate(
+        (1.0 - NdotV) * lerp(1, NdotL, saturate(inputData.rimLightAlign)) * lerp(
+            1, 1 - NdotL, saturate(-inputData.rimLightAlign)));
+    float delta = fwidth(rim);
+    real3 rimLighting = smoothstep(rimPower - delta, rimPower + delta + inputData.rimLightSmoothness, rim) * inputData.rimLightColor.rgb;
+    return rimLighting * mainLight.shadowAttenuation;
+}
 
 // local shadow by depth
 
@@ -232,14 +246,17 @@ half3 calToonCommonLighting(ToonInputData inputData, ToonCommonSurfaceData surfa
 
     // 环境光spe by probe
 
+    // composite
+    half3 finalColor = mainLightResult + additionalLightsResult + envLightResult;
+
     // 边缘光
-    // half3 rimLightResult = ShadeRimLight(surfaceData, viewDirWS);
+    finalColor += ShadeFresnelRimLight(inputData, mainLight, viewDirWS);
 
 
 //     // 全局光照 SSR and so on
 
     // return envLightResult;
-    return (mainLightResult + additionalLightsResult + envLightResult);
+    return finalColor;
 }
 
 half3 calToonEyeLighting(ToonInputData inputData, ToonEyeSurfaceData surfaceData)
@@ -274,24 +291,24 @@ half3 calToonEyeLighting(ToonInputData inputData, ToonEyeSurfaceData surfaceData
 
     half3 viewParallax = abs(normalize(TransformWorldToViewDir(viewDirWS)));
     // 高光
-    #ifdef _EYE_HIGHLIGHT
-        half3 lightParallax = normalize(TransformWorldToViewDir(mainLight.direction));
-        half3 eyeH = normalize(viewParallax + lightParallax);
-        half eyeNdotHFlat = dot(eyeH, -surfaceData.faceFrontDirection);
+    // #ifdef _EYE_HIGHLIGHT
+    //     half3 lightParallax = normalize(TransformWorldToViewDir(mainLight.direction));
+    //     half3 eyeH = normalize(viewParallax + lightParallax);
+    //     half eyeNdotHFlat = dot(eyeH, -surfaceData.faceFrontDirection);
         
-        float2 eyeHighlightUV = HighlightUV;
-        // 考虑下后面需不需要这种高光旋转的操作，需要贴图以及UV满足一定条件
-        // float maxRotation = inputData.eyeHighlightRotateDegree;
-        // eyeHighlightUV = RotateUVDeg(eyeHighlightUV, float2(0.5,0.5),min(eyeNdotHFlat.x * maxRotation, maxRotation));
-        half3 eyeHighlightCol = SAMPLE_TEXTURE2D_X(_HighlightMap, sampler_HighlightMap, eyeHighlightUV).rgb * _HighlightColorTint;
-        eyeHighlightCol *= _HighlightColorTint;
+    //     float2 eyeHighlightUV = HighlightUV;
+    //     // 考虑下后面需不需要这种高光旋转的操作，需要贴图以及UV满足一定条件
+    //     // float maxRotation = inputData.eyeHighlightRotateDegree;
+    //     // eyeHighlightUV = RotateUVDeg(eyeHighlightUV, float2(0.5,0.5),min(eyeNdotHFlat.x * maxRotation, maxRotation));
+    //     half3 eyeHighlightCol = SAMPLE_TEXTURE2D_X(_HighlightMap, sampler_HighlightMap, eyeHighlightUV).rgb * _HighlightColorTint;
+    //     eyeHighlightCol *= _HighlightColorTint;
 
-        half eyeNoL = saturate(dot(surfaceData.faceFrontDirection, mainLight.direction));
+    //     half eyeNoL = saturate(dot(surfaceData.faceFrontDirection, mainLight.direction));
 
-        eyeHighlightCol = lerp(eyeHighlightCol, eyeNoL * eyeHighlightCol, surfaceData.highlightDarken);
-        finalColor += eyeHighlightCol;
+    //     eyeHighlightCol = lerp(eyeHighlightCol, eyeNoL * eyeHighlightCol, surfaceData.highlightDarken);
+    //     finalColor += eyeHighlightCol;
 
-    #endif
+    // #endif
 
     // envDiffuse
     half3 envDiffuse = CalculateSkyboxIrradiance(surfaceData.faceFrontDirection);
@@ -300,6 +317,9 @@ half3 calToonEyeLighting(ToonInputData inputData, ToonEyeSurfaceData surfaceData
     // EnvSpecular
     // 不想用matcap方式，可否使用probe的方式解决？
     // finalColor += MatCapHightlight(inputData, mainLight) * lerp(1, inputData.pupilMask, inputData.usePupilMask);
+
+    // 边缘光
+    finalColor += ShadeFresnelRimLight(inputData, mainLight, viewDirWS);
 
     return finalColor;
 }
@@ -341,6 +361,9 @@ half3 calToonFaceLighting(ToonInputData inputData, ToonFaceSurfaceData surfaceDa
     // EnvSpecular
     // 不想用matcap方式，可否使用probe的方式解决？
     // finalColor += MatCapHightlight(inputData, mainLight) * lerp(1, inputData.pupilMask, inputData.usePupilMask);
+
+    // 边缘光
+    finalColor += ShadeFresnelRimLight(inputData, mainLight, viewDirWS);
 
     return finalColor;
 }

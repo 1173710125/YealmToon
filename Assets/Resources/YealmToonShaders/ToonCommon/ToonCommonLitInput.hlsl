@@ -15,6 +15,11 @@ CBUFFER_START(UnityPerMaterial)
 
     float _OutlineWidth;
     half4 _OutlineColor;
+
+    half4 _RimLightColor;
+    half _RimLightStrength;
+    half _RimLightAlign;
+    half _RimLightSmoothness;
 CBUFFER_END
 
 TEXTURE2D(_BaseMap);        SAMPLER(sampler_BaseMap);
@@ -51,6 +56,11 @@ inline void InitializeToonInputData(float2 uv, float3 positionWS, float4 positio
     outInputData.normalWS = TransformTangentToWorld(outInputData.normalTS, tangentToWorld);
     outInputData.normalWS = NormalizeNormalPerPixel(outInputData.normalWS);
     outInputData.normalVS = TransformWorldToViewDir(outInputData.normalWS);
+
+    outInputData.rimLightColor = _RimLightColor;
+    outInputData.rimLightStrength = _RimLightStrength;
+    outInputData.rimLightAlign = _RimLightAlign;
+    outInputData.rimLightSmoothness = _RimLightSmoothness;
 
 }
 

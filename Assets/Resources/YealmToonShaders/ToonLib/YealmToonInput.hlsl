@@ -3,15 +3,24 @@
 
 struct ToonInputData
 {
+    // position
     float3 positionWS;
     float3 positionVS;
 
+    // normal
     half3 normalTS;
     half3 normalWS;
     half3 normalVS;
 
+    // uv
     float2 meshUV;
     float2 screenUV;
+
+    //depth rim lighting
+    half4 rimLightColor;
+    half rimLightStrength;
+    half rimLightAlign;
+    half rimLightSmoothness;
 };
 
 #endif

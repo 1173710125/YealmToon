@@ -127,7 +127,10 @@ Material:
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 1
+    - _RimLightAlign: 0
     - _RimLightFadeSpeed: 0.02
+    - _RimLightSmoothness: 0
+    - _RimLightStrength: 0
     - _RimLightThreshold: 0.1
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0

@@ -23,8 +23,9 @@ Shader "YealmToon/Hair"
 
         [Header(Rim Light)]
         [HDR]_RimLightColor("边缘光颜色", Color) = (1,1,1,1)
-        _RimLightThreshold("边缘光界限", Range(-1, 1)) = 0.1
-        _RimLightFadeSpeed("边缘光衰减速度", Range(0, 0.5)) = 0.02
+        _RimLightStrength("边缘光强度", Range(0, 1)) = 0
+        _RimLightAlign("边缘光偏移", Range(-1, 1)) = 0
+        _RimLightSmoothness("边缘光柔和度", Range(0, 1)) = 0
 
         [Header(Outline)]
         _OutlineWidth("描边宽度", Range(0, 10)) = 1
