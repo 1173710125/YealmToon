@@ -34,7 +34,6 @@ Varyings LitPassVertexFace(Attributes input)
     Varyings output = (Varyings)0;
 
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS);
-    output.positionWS = vertexInput.positionWS;
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
     #ifdef ToonShaderIsOutline
@@ -54,7 +53,12 @@ Varyings LitPassVertexFace(Attributes input)
     #endif
 
     output.uv.xy = input.texcoord;
-    output.positionCS = TransformWorldToHClip(output.positionWS);
+
+    // perspective correction
+    vertexInput.positionVS = TransformWorldToView(vertexInput.positionWS);
+    ToonCharacterPerspectiveCorrection(vertexInput.positionVS, UNITY_MATRIX_MV[2][3]);
+    output.positionWS = TransformViewToWorld(vertexInput.positionVS);
+    output.positionCS = TransformWViewToHClip(vertexInput.positionVS);
 
     #ifdef ToonShaderIsOutline
         output.positionCS = NiloGetNewClipPosWithZOffset(output.positionCS, 0.01);// + 0.03 * _IsFace

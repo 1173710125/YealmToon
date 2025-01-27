@@ -7,9 +7,7 @@ using UnityEngine.Rendering.Universal;
 [Serializable, VolumeComponentMenu("YealmToon/GlobalSettings")]
 public class YealmToonSettings : VolumeComponent, IPostProcessComponent
 {
-    public ClampedFloatParameter specularThreshold = new ClampedFloatParameter(0.8f, 0f, 1f);
-    public FloatRangeParameter brightShadowStepRange = new FloatRangeParameter(new Vector2(0f, 0.2f), -1, 1);
-
+    public ClampedFloatParameter perspectiveCorrectionIntensity = new ClampedFloatParameter(0f, -10f, 10f);
 
     public bool IsActive()
     {

@@ -4,6 +4,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "../ToonLib/YealmToonSurface.hlsl"
 #include "../ToonLib/YealmToonInput.hlsl"
+#include "../ToonLib/YealmToonCommon.hlsl"
 
 CBUFFER_START(UnityPerMaterial)
     half4 _BaseColor;

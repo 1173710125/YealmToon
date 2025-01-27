@@ -34,11 +34,15 @@ Varyings LitPassVertexEye(Attributes input)
     Varyings output = (Varyings)0;
 
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS);
-    output.positionWS = vertexInput.positionWS;
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
     output.uv.xy = input.texcoord;
-    output.positionCS = TransformWorldToHClip(output.positionWS);
+
+    // perspective correction
+    vertexInput.positionVS = TransformWorldToView(vertexInput.positionWS);
+    ToonCharacterPerspectiveCorrection(vertexInput.positionVS, UNITY_MATRIX_MV[2][3]);
+    output.positionWS = TransformViewToWorld(vertexInput.positionVS);
+    output.positionCS = TransformWViewToHClip(vertexInput.positionVS);
 
     output.normalWS = normalInput.normalWS;
     output.tangentWS = normalInput.tangentWS;

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Rendering.RenderGraphModule;
+using System;
 
 public class YealmToonGlobalSettingFeature : ScriptableRendererFeature
 {
@@ -13,16 +14,14 @@ public class YealmToonGlobalSettingFeature : ScriptableRendererFeature
         // It is passed as a parameter to the delegate function that executes the RenderGraph pass.
         private class PassData
         {
-            internal float specularThreshold;
-            internal Vector2 brightShadowStepRange;
+            internal float perspectiveCorrectionIntensity;
         }
 
         // This static method is passed as the RenderFunc delegate to the RenderGraph render pass.
         // It is used to execute draw commands.
         static void ExecutePass(PassData data, RasterGraphContext context)
         {
-            context.cmd.SetGlobalFloat("_SpecularThreshold", data.specularThreshold);
-            context.cmd.SetGlobalVector("_BrightShadowStepRange", data.brightShadowStepRange);
+            context.cmd.SetGlobalFloat("_PerspectiveCorrectionIntensity", (float)Math.Pow(2, data.perspectiveCorrectionIntensity));
         }
 
         internal bool Setup()
@@ -58,8 +57,7 @@ public class YealmToonGlobalSettingFeature : ScriptableRendererFeature
                 builder.SetRenderAttachment(resourceData.activeColorTexture, 0);
 
                 // 初始化passdata
-                passData.specularThreshold = m_YealmToonSettings.specularThreshold.value;
-                passData.brightShadowStepRange = m_YealmToonSettings.brightShadowStepRange.value;
+                passData.perspectiveCorrectionIntensity = m_YealmToonSettings.perspectiveCorrectionIntensity.value;
 
                 builder.AllowGlobalStateModification(true);
 

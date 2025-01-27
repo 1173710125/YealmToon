@@ -33,14 +33,13 @@ Varyings LitPassVertexCommon(Attributes input)
 {
     Varyings output = (Varyings)0;
 
-    VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS);
-    output.positionWS = vertexInput.positionWS;
+    VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
 #ifdef ToonShaderIsOutline
     //从自定义空间 将平滑法线还原到OS空间
-    float3 tangent = input.tangentOS;
-    float3 bitangent = normalize(cross(input.tangentOS, input.normalOS));
+    float3 tangent = input.tangentOS.xyz;
+    float3 bitangent = normalize(cross(input.tangentOS.xyz, input.normalOS.xyz));
     float3 normal = input.normalOS;
     float3 smoothNormal = input.smoothNormal;
 
@@ -53,8 +52,15 @@ Varyings LitPassVertexCommon(Attributes input)
     output.positionWS = TransformPositionWSToOutlinePositionWS(vertexInput.positionWS, vertexInput.positionVS.z, smoothNormalWS, _OutlineWidth);
 #endif
 
+    // perspective correction
+    vertexInput.positionVS = TransformWorldToView(vertexInput.positionWS);
+    ToonCharacterPerspectiveCorrection(vertexInput.positionVS, UNITY_MATRIX_MV[2][3]);
+    output.positionWS = TransformViewToWorld(vertexInput.positionVS);
+    output.positionCS = TransformWViewToHClip(vertexInput.positionVS);
+
+    // output.positionCS = TransformWorldToHClip(vertexInput.positionWS);
     output.uv.xy = input.texcoord;
-    output.positionCS = TransformWorldToHClip(output.positionWS);
+    
 
 #ifdef ToonShaderIsOutline
     // // [Read ZOffset mask texture]
@@ -103,7 +109,7 @@ void LitPassFragmentCommon(
 
     // 描边颜色
     #ifdef ToonShaderIsOutline
-        toonLighting *= _OutlineColor; // 考虑是否 *toonLighting
+        toonLighting *= _OutlineColor.rgb; // 考虑是否 *toonLighting
     #endif
 
     // 雾效

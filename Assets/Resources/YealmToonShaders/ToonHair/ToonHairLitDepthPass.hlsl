@@ -32,14 +32,16 @@ Varyings DepthOnlyVertex(Attributes input)
     UNITY_TRANSFER_INSTANCE_ID(input, output);
 
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS);
-    float3 positionWS = vertexInput.positionWS;
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
     #if defined(_ALPHA_CLIP)
         output.uv = input.texcoord;
     #endif
 
-    output.positionCS = TransformWorldToHClip(positionWS);
+    // perspective correction
+    vertexInput.positionVS = TransformWorldToView(vertexInput.positionWS);
+    ToonCharacterPerspectiveCorrection(vertexInput.positionVS, UNITY_MATRIX_MV[2][3]);
+    output.positionCS = TransformWViewToHClip(vertexInput.positionVS);
 
     return output;
 }

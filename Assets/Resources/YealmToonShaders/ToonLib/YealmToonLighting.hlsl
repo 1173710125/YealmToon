@@ -7,8 +7,6 @@
 #include "YealmToonInput.hlsl"
 #include "YealmToonCommon.hlsl"
 
-half _SpecularThreshold;
-half2 _BrightShadowStepRange;
 half _EnvLightingIntensity;
 
 half4 _UpPartSkyColor;
@@ -68,7 +66,7 @@ half3 ShadeSingleLightFace(ToonInputData inputData, ToonFaceSurfaceData surfaceD
     half litOrShadowArea = FaceShadowMapAttenuation(surfaceData, light);
 
     // 根据litOrShadowArea的值 采样lightingRamp贴图，获取对应颜色
-    half3 litOrShadowColor = SAMPLE_TEXTURE2D(_RampLightingMap, sampler_RampLightingMap, float2(litOrShadowArea, 0));
+    half3 litOrShadowColor = SAMPLE_TEXTURE2D(_RampLightingMap, sampler_RampLightingMap, float2(litOrShadowArea, 0)).rgb;
 
     // half3 litOrShadowColor = lerp(_ShadowTint.rgb, 1, litOrShadowArea);
 
@@ -163,7 +161,7 @@ half3 ShadeSingleLight(half3 normalWS, Light light, bool isAdditionalLight)
 
     // N dot L
     // simplest 1 line cel shade, you can always replace this line by your own method!
-    half litOrShadowArea = NoL01;
+    float litOrShadowArea = NoL01;
 
     // occlusion
     // litOrShadowArea *= surfaceData.occlusion;
@@ -176,7 +174,7 @@ half3 ShadeSingleLight(half3 normalWS, Light light, bool isAdditionalLight)
     litOrShadowArea *= light.shadowAttenuation;
 
     // 根据litOrShadowArea的值 采样lightingRamp贴图，获取对应颜色
-    half3 litOrShadowColor = SAMPLE_TEXTURE2D(_RampLightingMap, sampler_RampLightingMap, float2(litOrShadowArea, 0));
+    half3 litOrShadowColor = SAMPLE_TEXTURE2D(_RampLightingMap, sampler_RampLightingMap, float2(litOrShadowArea, 0)).rgb;
 
     // half3 litOrShadowColor = lerp(_ShadowTint.rgb, 1, litOrShadowArea);
 
