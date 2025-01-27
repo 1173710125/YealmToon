@@ -43,8 +43,6 @@ Varyings DepthOnlyVertex(Attributes input)
     ToonCharacterPerspectiveCorrection(vertexInput.positionVS, UNITY_MATRIX_MV[2][3]);
     output.positionCS = TransformWViewToHClip(vertexInput.positionVS);
 
-    // output.positionCS = TransformWorldToHClip(vertexInput.positionWS);
-
     return output;
 }
 

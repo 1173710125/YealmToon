@@ -49,7 +49,7 @@ Varyings LitPassVertexFace(Attributes input)
                                             tangent.z * smoothNormal.x + bitangent.z * smoothNormal.y + normal.z * smoothNormal.z);
         smoothNormalOS = normalize(smoothNormalOS);
         float3 smoothNormalWS = TransformObjectToWorldNormal(smoothNormalOS);
-        output.positionWS = TransformPositionWSToOutlinePositionWS(vertexInput.positionWS, vertexInput.positionVS.z, smoothNormalWS, _OutlineWidth);
+        vertexInput.positionWS = TransformPositionWSToOutlinePositionWS(vertexInput.positionWS, vertexInput.positionVS.z, smoothNormalWS, _OutlineWidth);
     #endif
 
     output.uv.xy = input.texcoord;
