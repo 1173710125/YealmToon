@@ -33,6 +33,7 @@ Varyings LitPassVertexCommon(Attributes input)
 {
     Varyings output = (Varyings)0;
 
+    input.positionOS.xyz = GetFOVAdjustedPositionOS(input.positionOS.xyz, _ObjectCenterPositionWS);
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
@@ -52,11 +53,8 @@ Varyings LitPassVertexCommon(Attributes input)
     vertexInput.positionWS = TransformPositionWSToOutlinePositionWS(vertexInput.positionWS, vertexInput.positionVS.z, smoothNormalWS, _OutlineWidth);
 #endif
 
-    // perspective correction
-    vertexInput.positionVS = TransformWorldToView(vertexInput.positionWS);
-    ToonCharacterPerspectiveCorrection(vertexInput.positionVS, UNITY_MATRIX_MV[2][3]);
-    output.positionWS = TransformViewToWorld(vertexInput.positionVS);
-    output.positionCS = TransformWViewToHClip(vertexInput.positionVS);
+    output.positionWS = vertexInput.positionWS;
+    output.positionCS = TransformWorldToHClip(vertexInput.positionWS);
 
     // output.positionCS = TransformWorldToHClip(vertexInput.positionWS);
     output.uv.xy = input.texcoord;

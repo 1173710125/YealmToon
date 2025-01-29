@@ -6,6 +6,7 @@ struct ToonInputData
     // position
     float3 positionWS;
     float3 positionVS;
+    float4 positionCS;
 
     // normal
     half3 normalTS;
@@ -21,6 +22,10 @@ struct ToonInputData
     half rimLightStrength;
     half rimLightAlign;
     half rimLightSmoothness;
+
+    // depth offset shadow
+    half offsetShadowDistance;
+
 };
 
 #endif

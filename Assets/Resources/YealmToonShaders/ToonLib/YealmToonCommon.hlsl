@@ -1,12 +1,19 @@
 #ifndef TOON_COMMON_INCLUDED
 #define TOON_COMMON_INCLUDED
 
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
 TEXTURE2D(_ToonDepthTexture); SAMPLER(sampler_ToonDepthTexture);
 
-float _PerspectiveCorrectionIntensity; // 1 为不变，0~1  1~1000
-void ToonCharacterPerspectiveCorrection(inout float3 positionVS, float pivotZ)
+float _PerspectiveCorrectionIntensity;
+float3 GetFOVAdjustedPositionOS(float3 positionOS, float3 objectCenterWS)
 {
-    positionVS.z = (positionVS.z - pivotZ) / (_PerspectiveCorrectionIntensity + 0.001) + pivotZ;
+    // Adjusts object-space position based on field-of-view and a shift factor. 
+    // use to perspective distortion. 
+    float3 objectCenterVS = TransformWorldToView(objectCenterWS);
+    float3 fovAdjustedPositionVS = mul(UNITY_MATRIX_MV, float4(positionOS.xyz, 1)).xyz;
+    fovAdjustedPositionVS.z = (fovAdjustedPositionVS.z - objectCenterVS.z)/(_PerspectiveCorrectionIntensity + 1) + objectCenterVS.z;
+    return mul(Inverse(UNITY_MATRIX_MV), float4(fovAdjustedPositionVS, 1)).xyz;
 }
 
 float4 TransformHClipToViewPortPos(float4 positionCS)

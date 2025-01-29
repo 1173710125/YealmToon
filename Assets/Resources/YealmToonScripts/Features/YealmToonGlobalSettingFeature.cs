@@ -21,7 +21,7 @@ public class YealmToonGlobalSettingFeature : ScriptableRendererFeature
         // It is used to execute draw commands.
         static void ExecutePass(PassData data, RasterGraphContext context)
         {
-            context.cmd.SetGlobalFloat("_PerspectiveCorrectionIntensity", (float)Math.Pow(2, data.perspectiveCorrectionIntensity));
+            context.cmd.SetGlobalFloat("_PerspectiveCorrectionIntensity", data.perspectiveCorrectionIntensity);
         }
 
         internal bool Setup()

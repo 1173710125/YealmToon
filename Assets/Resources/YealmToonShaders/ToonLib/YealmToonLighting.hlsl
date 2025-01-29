@@ -16,6 +16,28 @@ half4 _UndergroundPartSkyColor;
 TEXTURECUBE(_EnvCubeMap); SAMPLER(sampler_EnvCubeMap);
 
 //////////////////////////////////////////////////////////////////////////////////////
+// 一些通用函数
+//////////////////////////////////////////////////////////////////////////////////////
+// 适用于较近的物体之间的高清晰度阴影
+// half HandleOffsetShadow(inout ToonInputData inputData, Light mainLight)
+// {
+//     float4 scaledScreenParams = GetScaledScreenParams();
+//     float3 viewLightDir = normalize(TransformWorldToViewDir(mainLight.direction)) * (1 / inputData.positionNDC.w);
+//     float2 samplingPoint = inputData.screenUV + inputData.offsetShadowDistance * viewLightDir.xy / scaledScreenParams.xy;
+//     float animeShadowDepth = SampleCharacterDepthOffsetShadow(samplingPoint).r;
+//     half offsetMaterialID = SAMPLE_TEXTURE2D_LOD(_ASPMaterialTexture, asp_point_clamp_sampler, samplingPoint, 0).r;
+//     offsetMaterialID *= 255.0;
+//     //check if is same material
+//     half visibleFactor = step(0.002, abs(offsetMaterialID - _MaterialID));
+//     visibleFactor *= step(0.1   , offsetMaterialID);
+//     if (LinearEyeDepth(inputData.positionCS.z, _ZBufferParams) - ASP_OFFSET_SHADOW_EYE_BIAS > LinearEyeDepth(animeShadowDepth, _ZBufferParams) && visibleFactor > 0)
+//     {
+//         return 0;
+//     }
+//     return 1;
+// }
+
+//////////////////////////////////////////////////////////////////////////////////////
 // face光照 only
 //////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +61,9 @@ half FaceShadowMapAttenuation(ToonFaceSurfaceData surfaceData, Light light)
     float lightAttenuation = saturate(smoothstep(threshold - surfaceData.faceShadowSmoothness,
                                                  threshold + surfaceData.faceShadowSmoothness, flippedFaceShadow));
 
-    return 1.0 - lightAttenuation;
+    float SDFMapShadow = 1.0 - lightAttenuation;
+
+    return SDFMapShadow;
 }
 
 half3 ShadeSingleLightFace(ToonInputData inputData, ToonFaceSurfaceData surfaceData, Light light, bool isAdditionalLight)
@@ -54,7 +78,6 @@ half3 ShadeSingleLightFace(ToonInputData inputData, ToonFaceSurfaceData surfaceD
     if(isAdditionalLight == true)
         distanceAttenuation = min(4,light.distanceAttenuation); //clamp to prevent light over bright if point/spot light too close to vertex
 
-
     // N dot L
     // half litOrShadowArea = NoL01;
 
@@ -63,6 +86,7 @@ half3 ShadeSingleLightFace(ToonInputData inputData, ToonFaceSurfaceData surfaceD
 
     // light's shadow map
     // litOrShadowArea *= lerp(1,light.shadowAttenuation,_ReceiveShadowMappingAmount);
+
     half litOrShadowArea = FaceShadowMapAttenuation(surfaceData, light);
 
     // 根据litOrShadowArea的值 采样lightingRamp贴图，获取对应颜色

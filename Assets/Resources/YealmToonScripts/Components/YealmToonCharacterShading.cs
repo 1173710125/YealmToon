@@ -4,6 +4,7 @@ using UnityEngine;
 public class YealmToonCharacterShading : MonoBehaviour
 {
     public Transform HeadBoneTransform;
+    public Vector3 centerPositionOffset;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -22,6 +23,7 @@ public class YealmToonCharacterShading : MonoBehaviour
                 if(mat == null || mat.shader == null)
                     continue;
 
+                mat.SetVector("_ObjectCenterPositionWS", transform.position + centerPositionOffset);
                 mat.SetVector("_FaceFrontDirection", HeadBoneTransform != null ? HeadBoneTransform.forward : transform.forward);
                 mat.SetVector("_FaceRightDirection", HeadBoneTransform != null ? HeadBoneTransform.right : transform.right);
             }

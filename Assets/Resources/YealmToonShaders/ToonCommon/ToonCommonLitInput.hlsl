@@ -7,6 +7,8 @@
 #include "../ToonLib/YealmToonCommon.hlsl"
 
 CBUFFER_START(UnityPerMaterial)
+    float3 _ObjectCenterPositionWS;
+
     half4 _BaseColor;
     half _NormalScale;
 
@@ -51,6 +53,7 @@ inline void InitializeToonInputData(float2 uv, float3 positionWS, float4 positio
     outInputData.meshUV = uv;
     outInputData.positionWS = positionWS;
     outInputData.positionVS = TransformWorldToView(positionWS);
+    outInputData.positionCS = positionCS;
     
     outInputData.normalTS = SampleNormalTS(uv);
     half3x3 tangentToWorld = half3x3(tangentWS.xyz, bitangentWS.xyz, normalWS.xyz);

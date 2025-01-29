@@ -7,6 +7,8 @@
 #include "../ToonLib/YealmToonCommon.hlsl"
 
 CBUFFER_START(UnityPerMaterial)
+    float3 _ObjectCenterPositionWS;
+
     half4 _BaseColor;
     half4 _ShadowTint;
 

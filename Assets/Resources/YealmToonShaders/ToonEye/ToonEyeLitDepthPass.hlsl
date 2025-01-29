@@ -31,6 +31,7 @@ Varyings DepthOnlyVertex(Attributes input)
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
 
+    input.positionOS.xyz = GetFOVAdjustedPositionOS(input.positionOS.xyz, _ObjectCenterPositionWS);
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS);
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
@@ -38,10 +39,7 @@ Varyings DepthOnlyVertex(Attributes input)
         output.uv = input.texcoord;
     #endif
 
-    // perspective correction
-    vertexInput.positionVS = TransformWorldToView(vertexInput.positionWS);
-    ToonCharacterPerspectiveCorrection(vertexInput.positionVS, UNITY_MATRIX_MV[2][3]);
-    output.positionCS = TransformWViewToHClip(vertexInput.positionVS);
+    output.positionCS = vertexInput.positionCS;
 
     return output;
 }
