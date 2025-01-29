@@ -1,0 +1,81 @@
+#ifndef TOON_COMMON_MATERIAL_PASS_INCLUDED
+#define TOON_COMMON_MATERIAL_PASS_INCLUDED
+
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
+#include "../ToonLib/YealmToonLighting.hlsl"
+#include "../ToonLib/YealmToonOutline.hlsl"
+
+//////////////////////////////////////////////////////////////////////////////////////
+// struct
+//////////////////////////////////////////////////////////////////////////////////////
+struct Attributes
+{
+    float4 positionOS    : POSITION;
+    float4 tangentOS    : TANGENT;
+    float3 normalOS      : NORMAL;
+    float2 texcoord      : TEXCOORD0;
+    float3 smoothNormal : TEXCOORD3;
+};
+
+struct Varyings
+{
+    float2 uv                       : TEXCOORD0; //xy:texture uv
+    float3 positionWS                  : TEXCOORD1;    // xyz: posWS
+    half3 normalWS                 : TEXCOORD2;     // xyz: normal
+    half3 tangentWS                : TEXCOORD3;     // xyz: tangent 
+    half3 bitangentWS              : TEXCOORD4;
+
+
+    float4 positionCS                  : SV_POSITION;
+};
+
+Varyings MaterialPassVertex(Attributes input)
+{
+    Varyings output = (Varyings)0;
+
+    VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
+    VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
+
+
+    // perspective correction
+    vertexInput.positionVS = TransformWorldToView(vertexInput.positionWS);
+    ToonCharacterPerspectiveCorrection(vertexInput.positionVS, UNITY_MATRIX_MV[2][3]);
+    output.positionWS = TransformViewToWorld(vertexInput.positionVS);
+    output.positionCS = TransformWViewToHClip(vertexInput.positionVS);
+
+    // output.positionCS = TransformWorldToHClip(vertexInput.positionWS);
+    output.uv.xy = input.texcoord;
+    
+
+    output.normalWS = normalInput.normalWS;
+    output.tangentWS = normalInput.tangentWS;
+    output.bitangentWS = normalInput.bitangentWS;
+
+    return output;
+}
+
+
+void MaterialPassFragment(
+    Varyings input
+    , out half4 outColor : SV_Target0
+)
+{
+    // 本来不想写在这的，难顶有特殊情况
+#if defined(_ALPHA_CLIP)
+    half alpha = SampleAlbedoAlpha(input.uv).a;
+    clip(alpha - 0.5);
+#endif
+
+    ToonInputData toonInputData = (ToonInputData)0;
+    InitializeToonInputData(input.uv, input.positionWS, input.positionCS, input.tangentWS, input.bitangentWS, input.normalWS, toonInputData);
+
+    ToonCommonSurfaceData toonCommonSurfaceData = (ToonCommonSurfaceData)0;
+    InitializeToonSurfaceData(toonInputData, toonCommonSurfaceData);
+
+    // r:卡渲 范围指定
+    // b:albedo亮度
+    // g a:待定
+    outColor = half4(1,Luminance(toonCommonSurfaceData.albedo), 1, 1);
+}
+
+#endif

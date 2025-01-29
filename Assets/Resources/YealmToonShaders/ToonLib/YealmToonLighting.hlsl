@@ -114,6 +114,10 @@ real3 ShadeFresnelRimLight(ToonInputData inputData, Light mainLight, half3 viewD
 }
 
 // local shadow by depth
+half HandleDepthOffsetShadow()
+{
+
+}
 
 // 非PBR 通用高光
 // 眼睛高光不要用这个

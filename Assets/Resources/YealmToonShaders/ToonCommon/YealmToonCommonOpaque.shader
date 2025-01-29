@@ -235,6 +235,46 @@ Shader "YealmToon/CommonOpaque"
             #include "ToonCommonLitForwardPass.hlsl"
             ENDHLSL
         }
+
+        Pass
+        {
+            Name "YealmToonMaterialPass"
+            Tags
+            {
+                "LightMode" = "YealmToonMaterialPass"
+            }
+
+            // -------------------------------------
+            // Render State Commands
+            ZWrite On
+            Cull [_CullMode]
+            ZTest LEqual
+
+            HLSLPROGRAM
+            #pragma target 2.0
+
+            // -------------------------------------
+            // Shader Stages
+            #pragma vertex MaterialPassVertex 
+            #pragma fragment MaterialPassFragment 
+
+            // -------------------------------------
+            // Material Keywords
+            #pragma shader_feature_local _ALPHATEST_ON
+            
+            // -------------------------------------
+            // Universal Pipeline keywords
+
+            // -------------------------------------
+            // Unity defined keywords
+            //#pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+
+            // -------------------------------------
+            // Includes
+            #include "ToonCommonLitInput.hlsl"
+            #include "ToonCommonLitMaterialPass.hlsl"
+            ENDHLSL
+        }
     }
 
 }

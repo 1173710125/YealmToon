@@ -1,5 +1,5 @@
-#ifndef TOON_COMMON_FORWARD_PASS_INCLUDED
-#define TOON_COMMON_FORWARD_PASS_INCLUDED
+#ifndef TOON_FACE_FORWARD_PASS_INCLUDED
+#define TOON_FACE_FORWARD_PASS_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 #include "../ToonLib/YealmToonLighting.hlsl"

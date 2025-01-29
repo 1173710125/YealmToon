@@ -1,9 +1,8 @@
-#ifndef TOON_COMMON_FORWARD_PASS_INCLUDED
-#define TOON_COMMON_FORWARD_PASS_INCLUDED
+#ifndef TOON_EYE_FORWARD_PASS_INCLUDED
+#define TOON_EYE_FORWARD_PASS_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 #include "../ToonLib/YealmToonLighting.hlsl"
-#include "../ToonLib/YealmToonOutline.hlsl"
 
 //////////////////////////////////////////////////////////////////////////////////////
 // struct
