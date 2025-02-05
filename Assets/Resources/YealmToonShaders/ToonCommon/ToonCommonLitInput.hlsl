@@ -74,6 +74,7 @@ inline void InitializeToonSurfaceData(ToonInputData inputData, inout ToonCommonS
     // albedo
     half4 albedoAlpha = SampleAlbedoAlpha(inputData.meshUV);
     outSurfaceData.albedo = albedoAlpha.rgb * _BaseColor.rgb;
+    outSurfaceData.transparent = pow(albedoAlpha.a, 2.2);
 
     // specular
     outSurfaceData.specularColor = SampleSpecular(inputData.meshUV) * _SpecularColor.rgb;

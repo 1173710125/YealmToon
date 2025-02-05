@@ -36,8 +36,8 @@ Shader "YealmToon/CommonOpaque"
     {
         Tags
         {
-            "RenderType" = "Opaque"
             "RenderPipeline" = "UniversalPipeline"
+            "RenderType" = "Opaque"
         }
 
 

@@ -88,6 +88,7 @@ half3 ShadeSingleLightFace(ToonInputData inputData, ToonFaceSurfaceData surfaceD
     // litOrShadowArea *= lerp(1,light.shadowAttenuation,_ReceiveShadowMappingAmount);
 
     half litOrShadowArea = FaceShadowMapAttenuation(surfaceData, light);
+    litOrShadowArea *= light.shadowAttenuation;
 
     // 根据litOrShadowArea的值 采样lightingRamp贴图，获取对应颜色
     half3 litOrShadowColor = SAMPLE_TEXTURE2D(_RampLightingMap, sampler_RampLightingMap, float2(litOrShadowArea, 0)).rgb;
@@ -98,7 +99,7 @@ half3 ShadeSingleLightFace(ToonInputData inputData, ToonFaceSurfaceData surfaceD
 
     // saturate() light.color to prevent over bright
     // additional light reduce intensity since it is additive
-    return saturate(light.color) * lightAttenuationRGB * (isAdditionalLight ? 0.25 : 1);
+    return saturate(light.color) * lightAttenuationRGB * (isAdditionalLight ? 0.5 : 1);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -210,7 +211,7 @@ half3 ShadeSingleLight(half3 normalWS, Light light, bool isAdditionalLight)
 
     // saturate() light.color to prevent over bright
     // additional light reduce intensity since it is additive
-    return saturate(light.color) * lightAttenuationRGB * (isAdditionalLight ? 0.25 : 1);
+    return saturate(light.color) * lightAttenuationRGB * (isAdditionalLight ? 0.5 : 1);
 }
 
 // 环境光计算

@@ -24,7 +24,8 @@ Material:
   m_Shader: {fileID: 4800000, guid: 916017a6f43594740b43d03980f1cfa4, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - _EYE_HIGHLIGHT
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -119,7 +120,7 @@ Material:
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
-    - _EyeHighlight: 0
+    - _EyeHighlight: 1
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0

@@ -4,6 +4,7 @@
 struct ToonCommonSurfaceData
 {
     half3 albedo;
+    half transparent;
 
 // pbr
     half metallic;

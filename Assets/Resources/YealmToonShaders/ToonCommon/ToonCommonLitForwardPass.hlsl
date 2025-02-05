@@ -113,7 +113,9 @@ void LitPassFragmentCommon(
     // 雾效
 
 
-    outColor = half4(toonLighting, 1);
+    outColor = half4(toonLighting, 1.0 - toonCommonSurfaceData.transparent);
+    // outColor = half4(toonLighting, 0.3);
+    // outColor = half4(toonCommonSurfaceData.transparent.xxx, 1);
 }
 
 #endif
